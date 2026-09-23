@@ -1,0 +1,3121 @@
+<!doctype html>
+<html lang="en" data-theme="paper">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="color-scheme" content="light dark">
+  <meta name="description" content="A mobile-friendly player archive for the Lower March campaign.">
+  <title>The Lower March Player Archive</title>
+  <script>document.documentElement.classList.add("js");</script>
+  <style>
+    :root {
+      --font-scale: 1;
+      --topbar-h: 4rem;
+      --sidebar-w: 19rem;
+      --reading-w: 46rem;
+      --tap: 2.75rem;
+      --radius-sm: 0.55rem;
+      --radius-md: 0.9rem;
+      --radius-lg: 1.35rem;
+      --shadow: 0 1rem 3rem rgba(45, 34, 22, 0.12);
+      --transition: 180ms ease;
+    }
+
+    html[data-theme="paper"] {
+      --page: #f4efe5;
+      --surface: #fffdf8;
+      --surface-2: #ede3d1;
+      --ink: #2c251e;
+      --muted: #6d6256;
+      --faint: #96897a;
+      --line: #d8cbb8;
+      --line-strong: #bba98f;
+      --accent: #754f2b;
+      --accent-2: #a3713d;
+      --accent-soft: #ead9bd;
+      --quote: #f1e5d1;
+      --mark: #f3d98f;
+      --focus: #0d6ca8;
+      --topbar: rgba(255, 253, 248, 0.93);
+      --scrim: rgba(24, 18, 13, 0.48);
+    }
+
+    html[data-theme="night"] {
+      --page: #171511;
+      --surface: #211e19;
+      --surface-2: #2c2821;
+      --ink: #eee7d9;
+      --muted: #bbb0a0;
+      --faint: #8f8577;
+      --line: #443d33;
+      --line-strong: #625746;
+      --accent: #d3a56d;
+      --accent-2: #e1bb83;
+      --accent-soft: #3d3022;
+      --quote: #2b261f;
+      --mark: #765b22;
+      --focus: #70bde8;
+      --topbar: rgba(33, 30, 25, 0.94);
+      --scrim: rgba(0, 0, 0, 0.7);
+      --shadow: 0 1rem 3rem rgba(0, 0, 0, 0.34);
+    }
+
+    *, *::before, *::after { box-sizing: border-box; }
+    html {
+      background: var(--page);
+      color: var(--ink);
+      font-size: calc(17px * var(--font-scale));
+      scroll-behavior: smooth;
+      scroll-padding-top: calc(var(--topbar-h) + 1.25rem);
+      -webkit-text-size-adjust: 100%;
+    }
+    body {
+      margin: 0;
+      min-width: 18rem;
+      background:
+        radial-gradient(circle at 12% 0%, color-mix(in srgb, var(--accent-soft) 46%, transparent) 0, transparent 26rem),
+        var(--page);
+      color: var(--ink);
+      font-family: Georgia, "Iowan Old Style", "Palatino Linotype", Palatino, serif;
+      line-height: 1.72;
+      text-rendering: optimizeLegibility;
+    }
+    button, input { font: inherit; }
+    button { color: inherit; }
+    a { color: var(--accent); text-decoration-thickness: 0.08em; text-underline-offset: 0.18em; }
+    a:hover { color: var(--accent-2); }
+    img, svg { max-width: 100%; }
+    [hidden] { display: none !important; }
+    :focus-visible { outline: 3px solid var(--focus); outline-offset: 3px; }
+
+    .skip-link {
+      position: fixed;
+      left: 1rem;
+      top: 0.5rem;
+      z-index: 1000;
+      transform: translateY(-200%);
+      border-radius: var(--radius-sm);
+      background: var(--ink);
+      color: var(--surface);
+      padding: 0.55rem 0.8rem;
+    }
+    .skip-link:focus { transform: translateY(0); }
+
+    .reading-progress {
+      position: fixed;
+      inset: 0 0 auto 0;
+      z-index: 1001;
+      height: 3px;
+      background: transparent;
+      pointer-events: none;
+    }
+    .reading-progress span {
+      display: block;
+      width: 0;
+      height: 100%;
+      background: linear-gradient(90deg, var(--accent), var(--accent-2));
+      transition: width 80ms linear;
+    }
+
+    .topbar {
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      min-height: var(--topbar-h);
+      display: flex;
+      align-items: center;
+      gap: 0.65rem;
+      border-bottom: 1px solid var(--line);
+      background: var(--topbar);
+      padding: max(0.45rem, env(safe-area-inset-top)) max(0.7rem, env(safe-area-inset-right)) 0.45rem max(0.7rem, env(safe-area-inset-left));
+      backdrop-filter: blur(16px) saturate(125%);
+      -webkit-backdrop-filter: blur(16px) saturate(125%);
+    }
+    .topbar__brand {
+      min-width: 0;
+      flex: 1;
+      display: flex;
+      align-items: center;
+      gap: 0.7rem;
+      border: 0;
+      background: transparent;
+      cursor: pointer;
+      text-align: left;
+      padding: 0.2rem;
+    }
+    .brand-mark {
+      width: 2.15rem;
+      height: 2.15rem;
+      flex: 0 0 auto;
+      display: grid;
+      place-items: center;
+      border: 1px solid var(--line-strong);
+      border-radius: 50%;
+      background: var(--accent-soft);
+      color: var(--accent);
+      font-size: 1.15rem;
+    }
+    .brand-copy { min-width: 0; line-height: 1.1; }
+    .brand-copy strong,
+    .brand-copy small {
+      display: block;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+    .brand-copy strong { font-size: 0.89rem; letter-spacing: 0.02em; }
+    .brand-copy small { margin-top: 0.23rem; color: var(--muted); font-size: 0.7rem; }
+    .topbar__actions { display: flex; align-items: center; gap: 0.3rem; }
+    .icon-button, .text-button {
+      min-width: var(--tap);
+      min-height: var(--tap);
+      display: inline-grid;
+      place-items: center;
+      border: 1px solid var(--line);
+      border-radius: var(--radius-sm);
+      background: var(--surface);
+      color: var(--ink);
+      cursor: pointer;
+      transition: border-color var(--transition), background var(--transition), transform var(--transition);
+    }
+    .icon-button:hover, .text-button:hover { border-color: var(--line-strong); background: var(--surface-2); }
+    .icon-button:active, .text-button:active { transform: translateY(1px); }
+    .icon-button { padding: 0; font-family: ui-sans-serif, system-ui, sans-serif; font-size: 1rem; }
+    .text-button { padding: 0 0.75rem; font-family: ui-sans-serif, system-ui, sans-serif; font-size: 0.78rem; font-weight: 700; }
+    .menu-button { display: none; }
+
+    .app-shell {
+      width: min(100%, calc(var(--sidebar-w) + var(--reading-w) + 8rem));
+      margin: 0 auto;
+      display: grid;
+      grid-template-columns: var(--sidebar-w) minmax(0, 1fr);
+      align-items: start;
+    }
+    .sidebar {
+      position: sticky;
+      top: var(--topbar-h);
+      height: calc(100vh - var(--topbar-h));
+      height: calc(100dvh - var(--topbar-h));
+      overflow-y: auto;
+      border-right: 1px solid var(--line);
+      padding: 1.35rem 1.1rem 2rem;
+      scrollbar-width: thin;
+    }
+    .sidebar__eyebrow {
+      margin: 0 0 0.25rem;
+      color: var(--accent);
+      font-family: ui-sans-serif, system-ui, sans-serif;
+      font-size: 0.68rem;
+      font-weight: 800;
+      letter-spacing: 0.13em;
+      text-transform: uppercase;
+    }
+    .sidebar__title { margin: 0; font-size: 1.08rem; line-height: 1.25; }
+    .sidebar__hint { margin: 0.45rem 0 1rem; color: var(--muted); font-size: 0.77rem; line-height: 1.45; }
+    .sidebar__divider { height: 1px; margin: 1rem 0; background: var(--line); }
+    .sidebar__label {
+      margin: 0 0 0.45rem;
+      color: var(--muted);
+      font-family: ui-sans-serif, system-ui, sans-serif;
+      font-size: 0.68rem;
+      font-weight: 800;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+    }
+    .book-nav, .chapter-nav { display: grid; gap: 0.22rem; }
+    .book-nav button, .chapter-nav a {
+      width: 100%;
+      display: block;
+      border: 0;
+      border-radius: var(--radius-sm);
+      background: transparent;
+      color: var(--muted);
+      cursor: pointer;
+      font-family: ui-sans-serif, system-ui, sans-serif;
+      font-size: 0.77rem;
+      line-height: 1.35;
+      text-align: left;
+      text-decoration: none;
+      padding: 0.55rem 0.65rem;
+    }
+    .book-nav button:hover, .chapter-nav a:hover { background: var(--surface-2); color: var(--ink); }
+    .book-nav button[aria-current="page"] { background: var(--accent-soft); color: var(--accent); font-weight: 800; }
+    .chapter-nav a.depth-3 { padding-left: 1.35rem; font-size: 0.72rem; }
+    .chapter-nav a[aria-current="location"] { color: var(--accent); font-weight: 700; }
+    .drawer-scrim { display: none; }
+
+    .reader {
+      min-width: 0;
+      width: 100%;
+      padding: clamp(1.4rem, 4vw, 3.5rem) clamp(1rem, 5vw, 4.5rem) 6rem;
+    }
+    .welcome, .book-content, .book-pager { width: min(100%, var(--reading-w)); margin-inline: auto; }
+    .welcome__kicker {
+      margin: 0 0 0.65rem;
+      color: var(--accent);
+      font-family: ui-sans-serif, system-ui, sans-serif;
+      font-size: 0.74rem;
+      font-weight: 800;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+    }
+    .welcome h1 {
+      max-width: 12ch;
+      margin: 0;
+      font-size: clamp(2.5rem, 8vw, 5.4rem);
+      font-weight: 500;
+      letter-spacing: -0.045em;
+      line-height: 0.97;
+    }
+    .welcome__lede { max-width: 42rem; margin: 1.25rem 0 0; color: var(--muted); font-size: 1.08rem; line-height: 1.65; }
+    .welcome__meta {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.45rem 1rem;
+      margin: 1.25rem 0 2.2rem;
+      color: var(--faint);
+      font-family: ui-sans-serif, system-ui, sans-serif;
+      font-size: 0.74rem;
+    }
+    .book-cards { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0.85rem; }
+    .book-card {
+      min-height: 12rem;
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+      border: 1px solid var(--line);
+      border-radius: var(--radius-lg);
+      background: linear-gradient(145deg, var(--surface), color-mix(in srgb, var(--surface-2) 42%, var(--surface)));
+      box-shadow: 0 0.25rem 1rem rgba(60, 42, 24, 0.06);
+      color: var(--ink);
+      cursor: pointer;
+      padding: 1.15rem;
+      text-align: left;
+      transition: border-color var(--transition), box-shadow var(--transition), transform var(--transition);
+    }
+    .book-card:hover { border-color: var(--line-strong); box-shadow: var(--shadow); transform: translateY(-2px); }
+    .book-card__number {
+      color: var(--accent);
+      font-family: ui-sans-serif, system-ui, sans-serif;
+      font-size: 0.68rem;
+      font-weight: 800;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+    }
+    .book-card strong { margin-top: 1.3rem; font-size: 1.18rem; line-height: 1.18; }
+    .book-card__description { display: block; margin: 0.55rem 0 1rem; color: var(--muted); font-size: 0.77rem; line-height: 1.5; }
+    .book-card__meta { margin-top: auto; color: var(--faint); font-family: ui-sans-serif, system-ui, sans-serif; font-size: 0.69rem; }
+
+    .book-content > section.level1 { min-width: 0; }
+    .js .book-content > section.level1:not(.is-active) { display: none; }
+    .book-content > section.level1 > h1 {
+      margin: 0 0 0.75rem;
+      color: var(--ink);
+      font-size: clamp(2.15rem, 7vw, 4.2rem);
+      font-weight: 500;
+      letter-spacing: -0.035em;
+      line-height: 1.02;
+    }
+    .book-content > section.level1 > h1::after {
+      content: "";
+      display: block;
+      width: 4.25rem;
+      height: 0.22rem;
+      margin-top: 1rem;
+      border-radius: 99px;
+      background: linear-gradient(90deg, var(--accent), var(--accent-2));
+    }
+    .book-content h2, .book-content h3, .book-content h4 {
+      scroll-margin-top: calc(var(--topbar-h) + 1.25rem);
+      text-wrap: balance;
+    }
+    .book-content h2 {
+      margin: 3.25rem 0 1rem;
+      padding-top: 0.2rem;
+      color: var(--ink);
+      font-size: clamp(1.55rem, 4.5vw, 2.25rem);
+      font-weight: 500;
+      letter-spacing: -0.025em;
+      line-height: 1.15;
+    }
+    .book-content h3 { margin: 2.35rem 0 0.8rem; color: var(--accent); font-size: 1.24rem; line-height: 1.25; }
+    .book-content h4 { margin: 1.85rem 0 0.65rem; font-size: 1.02rem; line-height: 1.35; }
+    .book-content p { margin: 0 0 1.08rem; hanging-punctuation: first last; }
+    .book-content strong { color: color-mix(in srgb, var(--ink) 86%, var(--accent)); }
+    .book-content hr {
+      width: 6.5rem;
+      height: 1px;
+      margin: 2.65rem auto;
+      border: 0;
+      background: var(--line-strong);
+    }
+    .book-content blockquote {
+      margin: 1.4rem 0;
+      border-left: 0.22rem solid var(--accent-2);
+      border-radius: 0 var(--radius-md) var(--radius-md) 0;
+      background: var(--quote);
+      padding: 1rem 1.15rem;
+      color: color-mix(in srgb, var(--ink) 88%, var(--muted));
+    }
+    .book-content blockquote > :last-child { margin-bottom: 0; }
+    .book-content ul, .book-content ol { margin: 0.6rem 0 1.25rem; padding-left: 1.45rem; }
+    .book-content li { margin: 0.35rem 0; padding-left: 0.18rem; }
+    .book-content li::marker { color: var(--accent); }
+    .table-scroll {
+      width: 100%;
+      overflow-x: auto;
+      margin: 1.4rem 0 1.8rem;
+      border: 1px solid var(--line);
+      border-radius: var(--radius-md);
+      background: var(--surface);
+      -webkit-overflow-scrolling: touch;
+    }
+    .book-content table { width: 100%; min-width: 38rem; border-collapse: collapse; font-size: 0.8rem; line-height: 1.45; }
+    .book-content th, .book-content td { border-bottom: 1px solid var(--line); padding: 0.72rem 0.8rem; text-align: left; vertical-align: top; }
+    .book-content th { background: var(--surface-2); color: var(--ink); font-family: ui-sans-serif, system-ui, sans-serif; font-size: 0.72rem; letter-spacing: 0.02em; }
+    .book-content tr:last-child td { border-bottom: 0; }
+    .book-content tbody tr:nth-child(even) { background: color-mix(in srgb, var(--surface-2) 35%, transparent); }
+    .book-content code { border-radius: 0.25rem; background: var(--surface-2); padding: 0.1em 0.3em; font-size: 0.88em; }
+    .search-hit { animation: search-pulse 1.8s ease; }
+    @keyframes search-pulse { 0%, 100% { background: transparent; } 18%, 68% { background: var(--mark); } }
+
+    .book-pager { display: flex; justify-content: space-between; gap: 0.75rem; margin-top: 4rem; padding-top: 1.25rem; border-top: 1px solid var(--line); }
+    .book-pager button { max-width: 48%; }
+    .back-to-top {
+      position: fixed;
+      right: max(1rem, env(safe-area-inset-right));
+      bottom: max(1rem, env(safe-area-inset-bottom));
+      z-index: 70;
+      opacity: 0;
+      pointer-events: none;
+      box-shadow: var(--shadow);
+      transition: opacity var(--transition), transform var(--transition);
+      transform: translateY(0.5rem);
+    }
+    .back-to-top.is-visible { opacity: 1; pointer-events: auto; transform: translateY(0); }
+
+    .search-layer {
+      position: fixed;
+      inset: 0;
+      z-index: 500;
+      display: grid;
+      place-items: start center;
+      overflow-y: auto;
+      background: var(--scrim);
+      padding: max(4vh, env(safe-area-inset-top)) 1rem max(1rem, env(safe-area-inset-bottom));
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
+    }
+    .search-box {
+      width: min(100%, 42rem);
+      max-height: 88vh;
+      max-height: 88dvh;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      border: 1px solid var(--line-strong);
+      border-radius: var(--radius-lg);
+      background: var(--surface);
+      box-shadow: var(--shadow);
+    }
+    .search-box__head { display: flex; align-items: center; gap: 0.55rem; border-bottom: 1px solid var(--line); padding: 0.75rem; }
+    .search-input {
+      min-width: 0;
+      flex: 1;
+      min-height: var(--tap);
+      border: 1px solid var(--line);
+      border-radius: var(--radius-sm);
+      background: var(--page);
+      color: var(--ink);
+      padding: 0.65rem 0.8rem;
+      font-family: ui-sans-serif, system-ui, sans-serif;
+      font-size: 0.9rem;
+    }
+    .search-status { margin: 0; border-bottom: 1px solid var(--line); color: var(--muted); padding: 0.55rem 0.9rem; font-family: ui-sans-serif, system-ui, sans-serif; font-size: 0.7rem; }
+    .search-results { min-height: 8rem; overflow-y: auto; display: grid; align-content: start; gap: 0.25rem; padding: 0.55rem; }
+    .search-result {
+      width: 100%;
+      border: 0;
+      border-radius: var(--radius-sm);
+      background: transparent;
+      color: var(--ink);
+      cursor: pointer;
+      padding: 0.7rem 0.75rem;
+      text-align: left;
+    }
+    .search-result:hover { background: var(--surface-2); }
+    .search-result strong, .search-result span, .search-result small { display: block; }
+    .search-result strong { color: var(--accent); font-family: ui-sans-serif, system-ui, sans-serif; font-size: 0.72rem; }
+    .search-result span { margin-top: 0.2rem; font-size: 0.8rem; line-height: 1.45; }
+    .search-result small { margin-top: 0.25rem; color: var(--faint); font-family: ui-sans-serif, system-ui, sans-serif; font-size: 0.66rem; }
+    mark { border-radius: 0.15em; background: var(--mark); color: inherit; padding: 0 0.05em; }
+    .noscript-note { width: min(100%, var(--reading-w)); margin: 1rem auto; border: 1px solid var(--line); border-radius: var(--radius-md); background: var(--surface); padding: 1rem; }
+
+    @media (max-width: 860px) {
+      :root { --topbar-h: 3.7rem; }
+      .menu-button { display: inline-grid; }
+      .brand-copy small { display: none; }
+      .app-shell { display: block; }
+      .sidebar {
+        position: fixed;
+        inset: 0 auto 0 0;
+        z-index: 300;
+        width: min(86vw, 21rem);
+        height: 100vh;
+        height: 100dvh;
+        border-right: 1px solid var(--line-strong);
+        background: var(--surface);
+        box-shadow: var(--shadow);
+        padding: calc(1rem + env(safe-area-inset-top)) 1rem calc(2rem + env(safe-area-inset-bottom));
+        transform: translateX(-105%);
+        transition: transform var(--transition);
+      }
+      body.drawer-open { overflow: hidden; }
+      body.drawer-open .sidebar { transform: translateX(0); }
+      .drawer-scrim {
+        position: fixed;
+        inset: 0;
+        z-index: 250;
+        display: block;
+        border: 0;
+        background: var(--scrim);
+        opacity: 0;
+        pointer-events: none;
+        transition: opacity var(--transition);
+      }
+      body.drawer-open .drawer-scrim { opacity: 1; pointer-events: auto; }
+      .reader { padding-top: 2rem; }
+      .book-cards { grid-template-columns: 1fr; }
+      .book-card { min-height: 10.5rem; }
+    }
+
+    @media (max-width: 520px) {
+      .topbar { gap: 0.35rem; padding-inline: 0.45rem; }
+      .topbar__brand { gap: 0.45rem; }
+      .brand-mark { width: 1.95rem; height: 1.95rem; }
+      .brand-copy strong { max-width: 9rem; font-size: 0.78rem; }
+      .topbar__actions { gap: 0.2rem; }
+      .topbar .icon-button { min-width: 2.45rem; min-height: 2.45rem; }
+      .reader { padding-inline: 1rem; padding-bottom: 5rem; }
+      .welcome h1 { font-size: clamp(2.65rem, 16vw, 4.1rem); }
+      .welcome__lede { font-size: 1rem; }
+      .book-content > section.level1 > h1 { font-size: clamp(2.15rem, 13vw, 3.25rem); }
+      .book-content table { min-width: 34rem; }
+      .book-pager { flex-direction: column; }
+      .book-pager button { max-width: none; width: 100%; }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      html { scroll-behavior: auto; }
+      *, *::before, *::after { animation-duration: 0.01ms !important; animation-iteration-count: 1 !important; transition-duration: 0.01ms !important; }
+    }
+
+    @media print {
+      :root { --page: #fff; --surface: #fff; --ink: #111; --muted: #333; --line: #bbb; }
+      body { background: #fff; font-size: 11pt; }
+      .topbar, .sidebar, .drawer-scrim, .reading-progress, .back-to-top, .search-layer, .book-pager, .welcome { display: none !important; }
+      .app-shell { display: block; width: 100%; }
+      .reader, .book-content { width: 100%; max-width: none; padding: 0; }
+      .book-content > section.level1, .js .book-content > section.level1:not(.is-active) { display: block !important; break-before: page; }
+      .book-content > section.level1:first-child { break-before: auto; }
+      .book-content > section.level1 > h1 { font-size: 28pt; }
+      .book-content h2 { font-size: 19pt; break-after: avoid; }
+      .book-content h3 { font-size: 14pt; break-after: avoid; }
+      .book-content p, .book-content li { orphans: 3; widows: 3; }
+      .table-scroll { overflow: visible; border: 0; }
+      .book-content table { min-width: 0; font-size: 8pt; }
+      a { color: inherit; text-decoration: none; }
+    }
+  </style>
+</head>
+<body>
+  <a class="skip-link" href="#reader">Skip to reading</a>
+  <div class="reading-progress" aria-hidden="true"><span id="progressBar"></span></div>
+
+  <header class="topbar">
+    <button class="icon-button menu-button" id="menuButton" type="button" aria-label="Open navigation" aria-controls="sidebar" aria-expanded="false">☰</button>
+    <button class="topbar__brand" id="homeButton" type="button" aria-label="Return to the library">
+      <span class="brand-mark" aria-hidden="true">✦</span>
+      <span class="brand-copy">
+        <strong>Lower March Archive</strong>
+        <small id="currentBookLabel">Player edition</small>
+      </span>
+    </button>
+    <div class="topbar__actions" aria-label="Reading controls">
+      <button class="icon-button" id="searchButton" type="button" aria-label="Search the archive" title="Search">⌕</button>
+      <button class="icon-button font-down" id="fontDownButton" type="button" aria-label="Decrease text size" title="Decrease text size">A−</button>
+      <button class="icon-button" id="fontUpButton" type="button" aria-label="Increase text size" title="Increase text size">A+</button>
+      <button class="icon-button" id="themeButton" type="button" aria-label="Use dark reading mode" title="Change reading mode">☾</button>
+    </div>
+  </header>
+
+  <div class="app-shell">
+    <aside class="sidebar" id="sidebar" aria-label="Archive navigation">
+      <p class="sidebar__eyebrow">Player edition</p>
+      <h2 class="sidebar__title">The Lower March</h2>
+      <p class="sidebar__hint">Choose a volume, then jump directly to a chapter or worksheet.</p>
+      <nav class="book-nav" id="bookNav" aria-label="Volumes"></nav>
+      <div class="sidebar__divider"></div>
+      <p class="sidebar__label" id="chapterLabel">In this volume</p>
+      <nav class="chapter-nav" id="chapterNav" aria-labelledby="chapterLabel"></nav>
+    </aside>
+    <button class="drawer-scrim" id="drawerScrim" type="button" aria-label="Close navigation"></button>
+
+    <main class="reader" id="reader" tabindex="-1">
+      <section class="welcome" id="library" aria-labelledby="welcomeTitle">
+        <p class="welcome__kicker">The Lower March campaign</p>
+        <h1 id="welcomeTitle">Player Archive</h1>
+        <p class="welcome__lede">Chronicles of the road, books recovered from March Keep, and the choices now before its defenders—collected in a single edition designed for comfortable reading on a phone, tablet, or computer.</p>
+        <div class="welcome__meta" aria-label="Archive summary">
+          <span>4 volumes</span>
+          <span>Offline-ready</span>
+          <span>Searchable</span>
+          <span>Player-safe collection</span>
+        </div>
+        <div class="book-cards" id="bookCards"></div>
+      </section>
+
+      <noscript><p class="noscript-note">The reading controls require JavaScript, but every volume is included below and remains fully readable.</p></noscript>
+
+      <div class="book-content" id="bookContent">
+<section id="book-chronicles" class="level1">
+<h1>The Chronicles</h1>
+<p><em>Accounts of the journey, voices from the keep, and pages from its
+shelves.</em></p>
+<p>The Chronicles collect what has happened in play. Rumors record what
+someone says; books record what someone chose to write. Neither a
+confident speaker nor a handsome binding guarantees the truth. A
+character knows an account when they witness it, hear it, or read
+it.</p>
+<section id="authors-note" class="level2">
+<h2>Author’s Note</h2>
+<p>I have served, by necessity, as scribe, historian, and scholar in
+assembling this account. I gathered the surviving journals, temple
+records, official reports, tavern songs, and recollections of those who
+claimed to have known the company of adventurers who would later pass
+into legend. Where those sources disagreed, I have preserved the
+disagreement rather than forcing certainty upon the past.</p>
+<p>Many generations have embroidered their deeds. Victories became
+miracles, narrow escapes became effortless triumphs, and ordinary
+enemies grew into monsters fit for song. Such exaggerations do them no
+honor. The truth, insofar as it can still be recovered, is remarkable
+enough. They were neither invincible nor unafraid. They made mistakes,
+suffered losses, quarreled, and sometimes survived by little more than
+chance.</p>
+<p>Yet they changed the course of history all the same. Their feats
+require no embellishment. My purpose is not to diminish the legend, but
+to uncover the people whose lives gave rise to it.</p>
+</section>
+<section id="from-the-annals-of-the-fall" class="level2">
+<h2>From the Annals of the Fall</h2>
+<p><em>Being an account of those first days after the Ruin of Snakemere
+Gate</em></p>
+<section id="chapter-i--of-the-strangers-who-came-before-the-fall"
+class="level3">
+<h3>Chapter I — Of the Strangers Who Came Before the Fall</h3>
+<p>And it came to pass, in the last days of Snakemere Gate before its
+overthrow, that two wanderers, Rem and Kael by name, came unto that
+place after many days’ hard travel. Yet they found no glad welcome
+there, for the town was already bowed beneath a shadow not wholly seen,
+and the hearts of its people had grown wary of all that came from beyond
+its walls.</p>
+<p>At the gate they encountered one Jeff, a watchman of the town, clad
+in piecemeal armor said to have been scavenged from the dead of
+Hammerfall. This man, though rough in station, was not without speech or
+memory, and over drink he spoke of the Godhammer, that dread thing cast
+down in the War of the Avatars, whose name endured in fear long after
+the truth of it had been swallowed by rumor and ash. By his word the
+travelers were directed to the inn.</p>
+<p>There they found the common room uneasy, and the eyes of the
+townsfolk restless. Though coin bought them lodging, it purchased not
+comfort. Lyra, who kept to the house, led them above and, in the
+speaking of small things, revealed a greater wrong. She said that some
+among the people had gone queer of spirit in recent days: bright and
+merry one morn, then sour, joyless, and unfit for company the next. Not
+murderous, nor wholly lost, yet altered in some inward way that troubled
+all who marked it. She also mourned the passing of a choir boy for whom
+she had borne especial fondness. And later that same night, as some
+accounts preserve with needless fondness, Rem returned below and won
+from Lyra further drink by an easy tongue.</p>
+<p>But before dawn all lesser concerns were swept aside. For the night
+was broken by the engines of war, and flaming stones were cast down upon
+the inn and upon the whole of Snakemere Gate. Kael, looking out into the
+ruinous dark, beheld the host come against them: hobgoblins and orcs,
+necromancers, and the dead raised to wicked service. The volunteers of
+the town stood then in a courage already doomed, giving their lives that
+others might flee. Rem and Kael, seeing the measure of the calamity,
+withdrew into the mountains, and there from the heights watched the
+beginning of the town’s destruction.</p>
+<p>Yet even the wilderness granted them no full concealment. A warforged
+master of the enemy’s engines, sharp-eyed and unyielding, marked signs
+of their encampment and sent goblin scouts to search the hills for
+hidden resistance. These came upon the fugitives, and battle followed in
+the dark places among the stone and brush. The scouts were slain, and
+thus did Rem and Kael preserve their lives through the first night of
+exile.</p>
+</section>
+<section
+id="chapter-ii--of-the-echo-that-followed-the-breaking-of-the-gate"
+class="level3">
+<h3>Chapter II — Of the Echo That Followed the Breaking of the Gate</h3>
+<p>And from the western heights the survivors beheld the final undoing
+of Snakemere Gate. For when at last the gate was broken, there was
+loosed from it a radiant force, bright and terrible, which those later
+years would name an echo of the Godhammer. Whether it was truly some
+remnant of that ancient weapon, or merely a lesser power bound to the
+same old ruin, remains disputed among learned men. Yet all who witnessed
+it agreed in this: that it was no common bursting of stone, but a
+release of force touched by old divinity or old war.</p>
+<p>Thereafter Rem and Kael turned farther westward, seeking to place
+hill, night, and distance between themselves and the wreckage. In the
+course of this flight they came upon two others who had escaped the
+ruin: Harrun and Kellin. And Harrun, being one who had seen much and
+lost more in the fall, gave testimony concerning those hours. He spoke
+of his people slaughtered and remade as undead things. He spoke also of
+the roads, where goblins and lesser scavengers fell upon the fleeing,
+killing the weak and stripping the dead and dying alike. Thus was it
+shown that ruin does not end with conquest, but breeds lesser cruelties
+in its wake.</p>
+<p>Through Harrun and Kellin the fugitives learned also more of the
+Triune as revered in those lands: Aor of the sun, Mara of the moon, and
+Serath, the guiding star set for the lost and the faithful alike. And it
+was made known that Kellin labored under a curse grievous to behold, and
+had been brought low by it. Harrun’s purpose, though burdened by grief,
+had not yet failed him, for he sought to bring Kellin unto Idylwind,
+where those bearing greater favor with Aor might still possess the means
+to cleanse what darkness clung to him.</p>
+<p>So the four went northward together into the forested highlands.
+There the land rose harsher and more lonely, and they found signs that
+beast-races had passed through those ways before them. Nor did their
+enemies wholly lose the trail, for goblin scouts found them again amidst
+the wild country. In the struggle that followed, the company came near
+unto death more than once, and were preserved not by strength alone but
+by stubborn fortune and the refusal to yield their breath before its
+appointed hour.</p>
+</section>
+<section
+id="chapter-iii--of-the-hollow-tree-and-the-tomb-beneath-the-storm"
+class="level3">
+<h3>Chapter III — Of the Hollow Tree and the Tomb Beneath the Storm</h3>
+<p>After these afflictions the company found at last a poor refuge, and
+in their weariness dragged Harrun into the hollow of an ancient tree. It
+was no fit shelter for the healthy, much less for the afflicted and
+hunted, yet necessity makes sanctuary of miserable things. There they
+took such rest as they were able.</p>
+<p>And when Harrun awoke, they looked and saw the coming of a storm over
+the highlands. But the record is plain that this was no ordinary
+weather. Those who survived it spoke thereafter of its force with
+unease, and many judged it unnatural in its bearing, whether stirred by
+sorcery, divine wrath, or some corruption loosened upon the land by war.
+What is certain is that the sight of it moved the fugitives to fear, and
+they resolved to seek more lasting shelter before it overtook them.</p>
+<p>Thus they went on and found at length an old crypt, half-lost to
+time, and there made their camp among the silence of the dead. For a
+little while the tomb held fast against wind and rain, and they rested
+in that dim and ancient house, as men do who have no better bargain to
+make with the night.</p>
+<p>Yet the dead granted them no lasting peace. For while the storm raged
+above, its violence at length burst open the doors leading farther
+inward, so that the sealed depths of the crypt were laid bare before
+them. And thus ended the first passage of their wandering after the fall
+of Snakemere Gate, and thus began the descent into older darkness.</p>
+</section>
+</section>
+<section id="from-the-concordance-of-the-western-road" class="level2">
+<h2>From the Concordance of the Western Road</h2>
+<p><em>Being a later reconstruction of the Hightower Vigil, the journey
+to March Keep, and the first days within its walls</em></p>
+<p>The oldest surviving copy of the <em>Annals of the Fall</em> ends at
+the opening of Hightower’s inner doors. The hand changes here, and with
+it the language.</p>
+<p>What follows was composed generations later, after the company had
+passed into legend and the first witnesses were dead. Its compiler drew
+upon fragments attributed to survivors, March Keep’s entry and prison
+rolls, military reports, temple commentaries, commercial inventories,
+judicial summaries, and songs whose certainty increased in proportion to
+their distance from the events. These sources do not always agree.</p>
+<p>The later historian possessed more records than the first annalist,
+but stood farther from the people whose lives they described. I have
+preserved the difference in their voices. A history written near the
+fire remembers differently from one assembled beside an archive.</p>
+<section id="chapter-iv--the-vigil-beneath-hightower" class="level3">
+<h3>Chapter IV — The Vigil Beneath Hightower</h3>
+<p>The crypt was called Hightower, although little remained above the
+earth to justify the name. Beneath it lay chambers older than the walls
+through which the company had entered, and the storm awakened what time
+had failed to bury.</p>
+<p>The first enemies were rats driven upward from the sealed places.
+When the creatures had been killed, the metal fittings of the crypt
+began to hum and pale lines appeared beneath Kellin’s skin. Witnesses
+later said that the boy looked upon the stone as if it had become
+transparent.</p>
+<p>“Not gone,” he said. “Only buried.”</p>
+<p>After a silence, he spoke again. “There were roads here before there
+were walls.”</p>
+<p>Harrun had believed that the fire at Snakemere merely marked the
+child. At Hightower he understood that it had opened something within
+him. Whatever Kellin saw beneath the crypt gave direction to the mark,
+but no cure.</p>
+<p>The surviving accounts disagree over the order of the chambers that
+followed. They agree upon the dangers: old rites, creatures altered by
+the place, hobgoblins sheltering where none should have lived, and
+passages laid bare by lightning. At the end of those descents the
+company confronted the being remembered as the Last Warden. Whether it
+had accepted its charge willingly, or merely outlived the purpose of its
+obedience, cannot now be established. By then it possessed little beyond
+its station and its command: it was there, the place was its own, and
+none would pass.</p>
+<p>The company fought until the Warden fell. At that moment the storm
+above Hightower began to die. Their victory did not end the danger.
+After the struggle, a giant spider seized Kellin and carried him into
+the webbed chambers beyond. The others pursued and recovered him. No
+reliable account preserves who reached the child first or exactly how he
+was freed. It is enough that he was taken, and that they did not leave
+him there.</p>
+<p>By the time Kellin had been restored to them, the force that held the
+storm around Hightower had spent itself. The company departed carrying
+wounds, unanswered questions, and the knowledge that the old roads
+beneath the world were not wholly dead.</p>
+</section>
+<section id="chapter-v--broken-trees-and-the-storm-caller"
+class="level3">
+<h3>Chapter V — Broken Trees and the Storm-Caller</h3>
+<p>The road east toward March Keep first warned them by means of broken
+timber. A tree had been snapped at a height beyond Kael’s reach, and
+fresh sap still gathered along the wound. A nearby stone bore a greasy
+smear and several coarse hairs. Farther down the slope lay the remains
+of a deer, opened and scattered rather than cleanly eaten.</p>
+<p>Later songs place a great battle with trolls there. Contemporary
+accounts do not. The company saw no troll. They heard heavy movement
+beyond sight and smelled something sour upon the air, which was reason
+enough to continue without demanding proof at sword-point.</p>
+<p>The next danger had prepared itself more carefully. Along the road
+they found spilled grain, a damaged refugee wagon, scattered belongings,
+and survivors trapped behind the wreckage. Grazzuk, a goblin shaman and
+leader among those who preyed upon the roads, had arranged the wagon,
+its cargo, its mule, and the living people around it as bait.</p>
+<p>Dwellin Stonewheel was among those still resisting. “There are living
+people behind that wagon,” he told the travelers. “Help me reach
+them.”</p>
+<p>The company broke Grazzuk’s defense and opened the way. Before they
+could finish him, the shaman called lightning through his staff.
+MaryBella Venn was killed. Rem was struck down so completely that those
+nearest her believed her journey ended there.</p>
+<p>Dwellin reached Grazzuk while the shaman stood exposed and delivered
+the final blow with his axe. When later accounts attempted to name him
+sole victor, he refused the honor.</p>
+<p>“They broke him,” he said. “I was the tool nearest the work.”</p>
+<p>Two traditions survive concerning Rem’s fall. The plain reports of
+the battle say only that she fell beneath the lightning and, against
+every expectation, drew breath again. The devotional histories claim
+that, at the final threshold, Mara acknowledged the ending before her
+and Tymora claimed the possibility that remained. Whatever passed beyond
+mortal sight, nothing already suffered was undone. MaryBella remained
+dead, and Grazzuk’s violence remained real. One narrow opening endured
+in an unfinished moment. Rem returned through it.</p>
+<p>Dwellin himself was far from home. He hailed from the Dwelling Place
+in the Aunoroch Desert, where a circular mountain range enclosed a great
+oasis. Ancient aquifers fed the basin from beneath the earth while the
+mountains prevented its waters from escaping. Over many ages, that
+confinement sustained an ecology unlike any found in the desert beyond
+the ring.</p>
+<p>The company gathered the living, Dwellin’s testimony, and what
+evidence remained of Grazzuk’s deeds, then turned once more toward March
+Keep. In the generations that followed, priests disputed whether Tymora
+had created Rem’s chance or merely recognized it. They spent
+considerably more ink upon the question than Rem spent time being
+dead.</p>
+</section>
+<section id="chapter-vi--two-gatekeepers-and-an-unsolvable-question"
+class="level3">
+<h3>Chapter VI — Two Gatekeepers and an Unsolvable Question</h3>
+<p>March Keep became visible first as smoke, then as wall, and finally
+as signal tower. Beyond it lay the refugee camp and rows of fresh
+graves. The company approached bloodied and armed, accompanied by
+Dwellin and those who had survived the wagon. Halfway to the gate, the
+tower raised a warning flag. The gate remained open, although every
+guard near it became attentive.</p>
+<p>A shallow creek ran beside the approach. There stood two guards:
+Biggs, who watched the wounded and the weapons, and Wedge, who had
+apparently spent much of the day preparing a test of intellect.</p>
+<p>“Before you enter,” Wedge announced, “one of us only tells the truth,
+and the other one lies.”</p>
+<p>Biggs looked past him toward Rem’s injuries. “Names. Last safe
+shelter. Road taken.”</p>
+<p>Wedge reminded Biggs that he had promised to play along. Biggs
+replied that he had promised only to entertain the idea. Their
+disagreement revealed that Wedge had also spent much of the day
+considering whether the creek secretly flowed in the opposite direction
+whenever no one watched it.</p>
+<p>“It might,” Wedge said, glancing at the water.</p>
+<p>“It does not,” said Biggs.</p>
+<p>“Now they know which one of us tells the truth.”</p>
+<p>“Good. Then they can answer the questions.”</p>
+<p>The puzzle had no solution. Wedge had never decided which guard lied,
+and Biggs had never agreed to participate. The creek, for its part,
+continued downhill.</p>
+<p>Once Biggs understood the severity of Rem’s wounds, ceremony ended.
+Wedge was sent running for a litter, a healer, and a clerk. Harrun
+vouched that Kellin was marked but neither undead nor an ordinary
+instrument of necromancy. Dwellin’s testimony and the gear taken from
+Grazzuk changed the company from unknown armed travelers into witnesses
+requiring the castellan’s attention.</p>
+<p>They entered March Keep not in triumph, but through the ordinary
+machinery by which a frightened fortress sorts danger from need: names
+recorded, weapons peace-bound, property registered, and the wounded
+carried ahead of testimony.</p>
+</section>
+<section id="chapter-vii--the-castellan-who-counted-the-cost"
+class="level3">
+<h3>Chapter VII — The Castellan Who Counted the Cost</h3>
+<p>Castellan Maeric Thornvale received them in a map-room burdened with
+unfinished reports, patrol markers, supply tallies, refugee estimates,
+accusations, and unopened dispatches. One gauntlet had been removed so
+that he might write. The other remained fastened. His armor was
+maintained but unpolished, and his manner retained only such ceremony as
+pressure had failed to strip from it.</p>
+<p>He looked first at their weapons, then at their boots, and then at
+the mud and blood the road had left upon them. Only afterward did he
+study their faces.</p>
+<p>“You came out of Hightower alive,” he said. “That makes you either
+useful or reckless. Possibly both. Start with the road. Then tell me
+what in the Reach has changed.”</p>
+<p>Maeric was himself a veteran of the Aunoroch Expedition, where
+command had forced upon him choices in which saving one company meant
+knowingly abandoning another. Later moralists would reduce such ordeals
+to tidy questions of numbered lives and necessary sacrifice. Maeric
+remembered names and faces. He knew that choosing the greater number did
+not make the others weigh any less.</p>
+<p>He therefore heard the company without mistaking attention for trust.
+Dwellin’s testimony and the staff taken from Grazzuk gave weight to
+their account. Their service earned them treatment, orientation,
+temporary quarters, and cautious standing within the Keep. It granted
+them neither command, private access to prisoners, nor ownership of what
+had been recovered from the dead.</p>
+<p>Within the walls they found more survivors of Snakemere: people who
+needed beds, food, work, and some answer to what would happen when the
+stores diminished and the next frightened company appeared at the
+gate.</p>
+<p>The travelers had reached shelter. The troubles that followed them
+had reached it too.</p>
+</section>
+<section id="chapter-viii--a-death-behind-the-walls" class="level3">
+<h3>Chapter VIII — A Death Behind the Walls</h3>
+<p>The assassination of Maron is the first event in this history for
+which there survives more evidence than certainty. March Keep preserved
+the lockdown orders, the prison records, the weapon left behind, and
+several accounts of the questioning that followed. Later testimony
+established the killer’s identity. None of this made the moral account
+simpler.</p>
+<p>Razor had not traveled with the company through Hightower, nor had he
+stood with them against Grazzuk. He arrived at March Keep by another
+road. The earliest surviving account of him predates his association
+with the Ashen Aor and says nothing of the False Light. It remembers
+instead a nameless child raised hungry in city alleys, taught first to
+steal, then to lie, then to fight. Gang captains gave him money, fear,
+and examples to follow. By twelve he carried a knife for them; in later
+years he collected debts, moved drugs, and killed.</p>
+<p>From that education Razor drew a creed: the one holding the blade
+held the truth. He learned to read a room as other men read a ledger,
+measuring fear, weapons, loyalties, and the point at which each person
+might yield. Yet those who commanded him kept his sight deliberately
+short. They gave him a cut of the profit, something to strike, and
+little reason to ask who had written the orders. When betrayal placed a
+contract upon his life, he fled through storm and crossroads, carrying
+their instruction with him.</p>
+<p>By the time he came to March Keep, later sources associate that creed
+with the False Light. True darkness conceals honestly. The False Light
+reveals enough to lead a traveler toward the wrong conclusion while
+allowing him to believe that he chose the road himself.</p>
+<p>In Kael, Razor saw something unfinished and familiar: a poor boy,
+observant, skilled with a knife, alert to money and insult, old enough
+to have killed and young enough not yet to know what killing meant.
+Maron became the instrument by which Razor intended to settle that
+uncertainty.</p>
+<p>He could have killed her himself. He could also have offered evidence
+against her, assisted the inquiry, or allowed the Keep to judge her.
+None of those choices served his actual purpose. Maron was the person
+Razor was willing to lose. Kael was the person he intended to
+change.</p>
+<p>Maron had overseen the Golden Ledger’s convoy during the collapse of
+Snakemere. The road was failing, the wagons damaged, the animals
+exhausted, and there was not room for everyone who sought escape. Under
+her authority, guards remained with the carts rather than being released
+to aid the refugees. People attempting to board were prevented or pulled
+away. Space and protection were preserved for cargo.</p>
+<p>That cargo was not wholly trivial. It included food, medicine,
+weapons, tools, maps, records, and other materials without which those
+who escaped might still die farther down the road. It also included
+coin, claims of ownership, debt records, and goods more useful to the
+Golden Ledger than to the people running beside its wagons. Maron’s
+defense was that she had preserved the means by which some community
+might survive after Snakemere could not. Her accusers answered that she
+had preserved the Ledger’s future while abandoning the people whose
+labor had made that future valuable.</p>
+<p>She did not display grief in a manner Kael recognized as grief. She
+spoke of the dead with the control of an officer defending an ugly
+decision, and of supplies with greater ease than she spoke of those who
+had been left behind. This did not prove that she felt nothing. To Kael,
+it proved enough.</p>
+<p>Razor did not order him simply to kill her. He told Kael to learn
+what she had done, decide whether she should leave the Keep alive, and
+return with his conclusion. The form mattered. An order would leave the
+decision with Razor. The False Light required Kael to experience the
+narrowed choice as his own judgment.</p>
+<p>Kael entered the dungeon alone. He passed a guard occupied with a
+knife game and reached Maron’s barred cell. No reliable transcript of
+their exchange survives. Later dramatists gave both of them speeches too
+polished for the circumstances. The older summaries agree only that Kael
+questioned her about the refugees, that Maron defended the preservation
+of the convoy, and that her controlled manner hardened his judgment
+against her.</p>
+<p>He attempted to open the cell. His lock pick broke, and the bars
+remained closed. Kael then threw a dagger through them and struck Maron
+in the ribs. He could not retrieve the weapon. The locked cell, the
+broken pick, and the abandoned blade would later survive as mute
+witnesses to an act whose living witnesses had reason to lie.</p>
+<p>Razor paid Kael five hundred gold pieces. Later accounts identify the
+money as a bounty raised among refugees, with Razor acting as its
+middleman. They do not reliably establish which refugees contributed,
+what each believed Maron had done, or whether they understood whom Razor
+intended to recruit for the work. The payment had not been Razor’s
+original objective. It was useful because it made corruption resemble
+employment.</p>
+<p>When Maron’s body was discovered, Maeric ordered the gates closed and
+brought the company in for questioning. During that inquiry Kael stood
+with his hood down and his back against the wall, wearing a sly smile as
+though he had escaped some private danger. The posture was borrowed from
+Razor: darkness performed in a well-lit room.</p>
+<p>Maeric noticed. He found the display suspicious, but suspicion is not
+proof, and the castellan did not yet possess enough of either to detain
+him. Kael left the questioning free and spent much of the day concealing
+the gold in the garden of the Triune temple.</p>
+<p>Razor cared less for the dagger, the bounty, or even Maron’s death
+than for what the act established. Kael had killed a helpless prisoner
+after being shown a true grievance and too few alternatives. He had done
+so believing the conclusion belonged entirely to him. The blade had
+found its victim; the False Light had found its investment.</p>
+<p>Thus the company’s first days of shelter ended with a locked gate, a
+murdered prisoner, and a castellan required once more to decide which
+lives might be endangered by the truth.</p>
+</section>
+<section id="chapter-ix--the-mindchemists-gift" class="level3">
+<h3>Chapter IX — The Mindchemist’s Gift</h3>
+<p>Not every meeting within March Keep concerned death, judgment, or
+institutional reprisal. Rem also met Avarune Myriss, a tiefling
+mindchemist whose explanations had a tendency to pass through several
+qualifications, two apologies, and at least one alarming possibility
+before arriving at their point. She gave Rem a small apparatus for
+brewing mead, which Avarune called a burpy. The surviving account does
+not preserve its full operation, although pressure, yeast, and
+contamination appear to have occupied much of the explanation.</p>
+<p>For a drunken monk, it is a gift with obvious professional
+relevance.</p>
+</section>
+</section>
+<section id="from-the-moonbound-account" class="level2">
+<h2>From the Moonbound Account</h2>
+<p><em>Being the earliest recovered passage concerning 달 and
+Jack</em></p>
+<p>The Concordance follows one company out of Hightower. Another account
+begins beneath the same stone. It derives chiefly from 달’s later
+recollection and therefore preserves things no exterior witness could
+have recorded: the scent she expected, the memories she doubted, and the
+questions that came before she knew where she was.</p>
+<section id="i--the-druid-in-the-stone" class="level3">
+<h3>I — The Druid in the Stone</h3>
+<p>달 was a druid whose soul had been bound to this plane through a
+phylactery. She awoke in darkness, enclosed by stone, as the Last Warden
+that had watched over her sleep died elsewhere in Hightower.</p>
+<p>She did not hear the blow that ended it. She heard the storm die.
+Thunder withdrew across the highlands, rain slackened against the stone
+above her, and the long violence of the weather diminished into dripping
+water and distance.</p>
+<p>Her last memory was ordinary enough to be cruel. She had lain down
+beside her beloved Jack and closed her eyes for the night. She
+remembered his warmth, the rhythm of his breathing, and the familiar
+animal scent that meant he was near even when the room was dark.</p>
+<p>That scent was gone.</p>
+<p>Other scents reached her through the cracks and the narrow vent: dank
+forest, rain-dark earth, wet moss and bark, lavender, and the green
+growth of a mid-spring highland forest. They were living smells, carried
+into a chamber of the dead. None of them was Jack.</p>
+<p>Around her there was only cold stone and the weight above her. She
+could not move. For a time she remained paralyzed within the tomb,
+unable to tell whether her body had failed, whether some spell held her,
+or whether the body she remembered had ever been hers at all.</p>
+<p>How had she come there? Had Jack belonged to this life, or to some
+earlier one preserved imperfectly by the phylactery? If her memories had
+crossed death with her, could she trust them merely because they felt
+like love?</p>
+<p>Movement returned slowly. 달 raised her hands against the slab above
+her and pushed. Stone ground against stone. Dust fell into the
+sarcophagus. The lid shifted, resisted, and then gave way far enough for
+her to force herself out.</p>
+<p>The chamber around her contained no Jack. But through a narrow vent
+came a sound she knew before she understood it.</p>
+<p>A purr.</p>
+<p>She followed it to the doorway and saw a goblin running away from the
+sound. Fear, confusion, and the absence of Jack became one rage. 달
+attacked before asking what the creature knew.</p>
+<p>The goblin, who later gave his name as Nib, begged for his life with
+both hands raised.</p>
+<p>“He’s your kitten, yes yes? You lost him, yes yes? I help you get
+your kitten. I has the moonwater, yes yes. Powerful it is.”</p>
+<p>달 did not trust him. Trust, however, was a smaller need than finding
+Jack. Still furious, she agreed.</p>
+<p>In the next room they found a bristleback that had entered the tombs
+earlier in search of food. It was now trapped in a corner, cowering from
+the purring and from the violence approaching behind it. The creature
+was frightened, hungry, and dangerous chiefly because it had nowhere
+left to flee.</p>
+<p>And there lay Jack—but not as 달 remembered him. His body had been
+turned to stone. Even then, she would later insist, the purring had come
+from him.</p>
+<p>Between 달 and the means to restore him stood a puzzle of doors and
+signal plates. Rage could break stone, but it could not make the
+mechanism answer correctly. She would have to understand the room before
+the room would yield Jack.</p>
+<p>The bristleback remained another problem, though not one she chose to
+solve with blood. Later 달 offered it food, placing the gift where it
+could approach without being cornered. Hunger overcame fear. The animal
+did not become tame, and friendship would be too generous a word for
+what passed between them. But for the moment it ceased to be a
+threat.</p>
+</section>
+<section id="ii--before-the-moon-shrine" class="level3">
+<h3>II — Before the Moon Shrine</h3>
+<p>달 faced the tomb’s puzzle while Nib guarded the moonwater and
+continued to insist upon both its power and his own usefulness. When the
+way had been opened, he kept his bargain. He used the moonwater upon
+Jack, the stone gave way, and 달’s companion lived again.</p>
+<p>Elsewhere in the tombs, 달 took supplies from a cart and concealed
+among them tablets depicting Jack and a fern. She intended to return for
+them.</p>
+<p>Their visit to the Moon Shrine still lay ahead, but Jack could now
+make the journey beside her. Nib remained with them. So did the
+bristleback—less formally, the pig—which had accepted food more readily
+than it had accepted 달.</p>
+<p>The company was assembled. Universal goodwill remained a work in
+progress.</p>
+</section>
+</section>
+<section id="rumors-around-the-keep" class="level2">
+<h2>Rumors Around the Keep</h2>
+<section id="the-price-of-a-closed-gate" class="level3">
+<h3>The price of a closed gate</h3>
+<p><em>A carter, near the gate.</em></p>
+<p>“I understand why they've shut it. I'd like to understand when it
+opens. A wheel doesn't stop needing repair because there's been a
+murder.”</p>
+</section>
+<section id="an-institution-remembers" class="level3">
+<h3>An institution remembers</h3>
+<p><em>A merchant, over a drink.</em></p>
+<p>“You think the Ledger's going to forget one of its own died here? I
+expect someone from Idylwind. Whether they bring condolences, questions,
+or an invoice is another matter.”</p>
+</section>
+<section id="what-the-records-leave-out" class="level3">
+<h3>What the records leave out</h3>
+<p><em>A survivor from Snakemere.</em></p>
+<p>“Find me a map that marks where the children played. They all show
+the warehouses. They all show the bridge. Apparently the rest of us
+lived in the margins.”</p>
+</section>
+<section id="three-lamps" class="level3">
+<h3>Three lamps</h3>
+<p><em>A temple attendant, tidying the lamps.</em></p>
+<p>“People come asking which Light will settle their argument. Sometimes
+I think they'd be happier with one lamp and two empty shelves.”</p>
+</section>
+<section id="a-shrine-worth-tending" class="level3">
+<h3>A shrine worth tending</h3>
+<p><em>A traveler discussing roadside sanctuaries.</em></p>
+<p>“There's a Moon Shrine with a stone heron by the water. If you're
+passing, see whether the channel needs clearing. Someone after you will
+be grateful, even if you never meet them.”</p>
+</section>
+<section id="the-argument-on-the-shelf" class="level3">
+<h3>The argument on the shelf</h3>
+<p><em>A reader leaving the wizard's library.</em></p>
+<p>“Read the little book about Snakemere, then the merchant's book about
+charters. They describe some of the same places. You'd scarcely know
+it.”</p>
+</section>
+</section>
+<section id="books-in-the-wizards-library" class="level2">
+<h2>Books in the Wizard's Library</h2>
+<p>The following volumes are available for consultation. Ask for a
+title, a subject, or a particular question; the passages below are a
+starting place.</p>
+<section id="hightower-beneath-hightower" class="level3">
+<h3>Hightower Beneath Hightower</h3>
+<p><em>An anonymous concordance assembled from Orik Fenstone's field
+journal, Moon Shrine fragments, funerary inscriptions, and the evidence
+of the ruin itself.</em></p>
+<blockquote>
+<p>Most ruins have the courtesy to belong to one dead people. Hightower
+does not. The tower seen from the road is the youngest part of the
+place. Beneath it lie a human burial house, a sanctuary of Mara, and an
+older road-work concerned not merely with who passed, but with whether
+the person who arrived remained the person who entered.</p>
+<p>The eastern chamber was not first made as a treasury. Its bowls held
+reflection, its rings preserved vows and speech, its pearls sustained
+power and perhaps memory, and its sealed tablets named those who
+entered, departed, or died between one place and another. Later keepers
+defended these things as valuables and, by misunderstanding them
+carefully, helped preserve them.</p>
+<p>The winged head sealed near the upright sarcophagus was once the last
+priestess of Hightower, called the Tongue of Mara. She learned that the
+Last Warden had not volunteered for his office and attempted to free
+him. The old work obeyed her command literally, separating identity from
+body while preserving voice, comprehension, and pain. Her shriek may yet
+contain the warning she could no longer finish.</p>
+</blockquote>
+<p><em>A cramped margin note:</em> “If the eastern room appears
+suspiciously clean, do not improve it by stealing the furniture.”</p>
+</section>
+<section id="the-three-lights-a-household-primer" class="level3">
+<h3>The Three Lights: A Household Primer</h3>
+<p><em>A small devotional manual, its corners softened by
+handling.</em></p>
+<blockquote>
+<p>Before Aor, we answer for our words and deeds. Before Mara, we
+remember what those deeds have done to living people. Before Serath, we
+consider the road they open before us.</p>
+<p>A promise belongs to all three. Its words must be honest; its burdens
+must be understood; its consequences must be faced. For this reason, the
+temple witnesses marriages and contracts as well as prayers. The
+merchant and the soldier may kneel beside one another for quite
+practical reasons.</p>
+<p>“Moon keep you” is spoken to those who travel, grieve, fall ill, or
+find themselves changed. “Follow your Star” offers guidance without
+choosing another person's destination. “By the Sun's truth” should be
+used with care. A careless oath can outlive the convenience for which it
+was sworn.</p>
+</blockquote>
+</section>
+<section id="a-defense-of-charters-and-the-credit-that-sustains-them"
+class="level3">
+<h3>A Defense of Charters and the Credit That Sustains Them</h3>
+<p><em>An Idylwind commercial pamphlet, printed in an expensive,
+readable hand.</em></p>
+<blockquote>
+<p>A caravan is purchased before it earns. Animals must be fed, guards
+engaged, wheels repaired, and stores assembled before any return reaches
+the countinghouse. The Golden Ledger joins these costs across many
+undertakings so that one failed journey need not end all the others.</p>
+<p>Consider Snakemere. The crossing required depots, wagons, secure
+storage, and agreements that strangers could trust. Those who now
+dispute the charters should say how these things would have been
+obtained without them, and who would pay to obtain them again.</p>
+<p>An investment may become indispensable long before it becomes
+profitable. The existence of a settlement does not erase the obligations
+through which it was founded.</p>
+</blockquote>
+<p><em>An unsigned margin note:</em> “Does the investment acquire
+obligations to the people who become indispensable to it?”</p>
+</section>
+<section id="snakemere-was-a-place" class="level3">
+<h3>Snakemere Was a Place</h3>
+<p><em>A collection of recollections copied in several hands.</em></p>
+<blockquote>
+<p>The early accounts begin with the crossing and the stores. Families
+enter later, usually as dependants. A child is first counted when
+another portion must be issued, though the parents may have spent years
+wondering whether there would ever be a child to count.</p>
+<p>Soldiers stayed after their service. Craftspeople found customers.
+Inns acquired regulars. The temple witnessed marriages, kept names, and
+received the dead. These things continued between the entries in the
+commercial books.</p>
+<p>Idylwind had built an outpost. Its inhabitants had made a home. Both
+statements can be found in the record. The difficulty began whenever one
+was offered as a sufficient answer to the other.</p>
+</blockquote>
+</section>
+<section id="small-sanctuaries-on-old-roads" class="level3">
+<h3>Small Sanctuaries on Old Roads</h3>
+<p><em>A traveler's handbook with water damage along the lower
+edge.</em></p>
+<blockquote>
+<p>At a sanctuary of Mara, first look for the ordinary work. A blocked
+channel, a guttered lamp, and a cup missing from its place may explain
+more than a ruined inscription. Travelers preserve such places by
+leaving them usable.</p>
+<p>At the Moon Shrine attended by a stone heron, the basin receives
+water through a narrow channel. The attendant demonstrates a practice
+with a clean cup, water, and lamplight. Attend to what it shows;
+eloquence is not a substitute for returning the cup.</p>
+<p>A second tradition invites the traveler to name what they leave
+behind and what they intend to carry onward. Some answer aloud. Others
+tend a lamp and sit awhile. This writer recommends leaving room for
+either practice.</p>
+</blockquote>
+</section>
+<section id="notes-on-the-comparison-of-disagreeing-histories"
+class="level3">
+<h3>Notes on the Comparison of Disagreeing Histories</h3>
+<p><em>A scholar's unfinished manuscript, with more corrections than
+ornament.</em></p>
+<blockquote>
+<p>When two accounts disagree, copy the disagreement before explaining
+it away. Record who wrote each account, when they wrote it, and what
+they could have known.</p>
+<p>A military report may begin when the patrol arrived. A merchant's
+history may begin when a charter was granted. A household's recollection
+may begin with a burial. Their different beginnings can produce
+different explanations of the same dispute without any writer inventing
+an event.</p>
+<p>Other disagreements are less easily resolved. Preserve those too. An
+uncertain date is useful evidence; a date made certain by your
+impatience is merely another error for the next reader to inherit.</p>
+<p>When possible, consult a record made for some other purpose. A repair
+bill may remember a bridge that a royal history preferred to
+overlook.</p>
+</blockquote>
+</section>
+<section id="vessels-vapours-and-the-troubles-of-clever-apparatus"
+class="level3">
+<h3>Vessels, Vapours, and the Troubles of Clever Apparatus</h3>
+<p><em>A workshop notebook with an unusually large number of crossed-out
+conclusions.</em></p>
+<blockquote>
+<p>The apprentice arrived with a device and asked what it was called. I
+asked what it did. We found that these were different questions, and
+spent the afternoon on the useful one.</p>
+<p>A vessel's name tells you something about its owner. Its stains,
+repairs, and missing pieces may tell you rather more about its
+employment. Record both. Do not allow admiration for ingenious
+construction to conceal the fact that you have not yet watched it
+work.</p>
+<p>The most valuable instruction supplied with any unfamiliar apparatus
+is an account of its failures. Where that account is absent, you may
+reasonably suspect that the previous owner expects you to continue the
+research.</p>
+</blockquote>
+<p><em>A later hand adds:</em> “Ask before borrowing. Especially if it
+has been named.”</p>
+</section>
+</section>
+</section>
+<section id="book-hightower" class="level1">
+<h1>Hightower Beneath Hightower</h1>
+<section
+id="a-concordance-of-the-road-watch-the-moon-sanctuary-and-the-ruin"
+class="level2">
+<h2>A Concordance of the Road-Watch, the Moon Sanctuary, and the
+Ruin</h2>
+<p><em>An anonymous volume assembled from Orik Fenstone's field journal,
+fragments preserved at the Moon Shrine, funerary inscriptions, and the
+evidence of the stones themselves. The first hand is old and formal; the
+correcting hand is later, brisker, and occasionally less
+patient.</em></p>
+<hr />
+<section id="a-notice-to-the-reader" class="level3">
+<h3>A Notice to the Reader</h3>
+<p>Most ruins have the courtesy to belong to one dead people. Hightower
+does not.</p>
+<p>The tower seen from the road is the youngest part of the place,
+though it has lent its name to everything beneath it. Its upper stones
+belong to frontier masons. Its inner chambers were altered by soldiers
+and storekeepers. Beneath those works lie the burials of an earlier
+human settlement, and beneath the burials is masonry for which no
+mason's name survives.</p>
+<p>This book therefore uses <em>Hightower</em> in three senses: the
+tower upon the hill, the sanctuary and tombs beneath it, and the older
+road-work into which both were built. Confusing the three has produced
+most of the bad histories and nearly all of the bad excavations.</p>
+<p>The surviving records do not permit certainty in every matter. Where
+the evidence is plain, it is stated plainly. Where several explanations
+remain, they are allowed to remain. An uncertain warning is still more
+useful than a confident invention.</p>
+<hr />
+</section>
+</section>
+<section id="i-the-tower-that-came-last" class="level2">
+<h2>I. The Tower That Came Last</h2>
+<p>Long before a tower stood upon the hill, travelers noticed that the
+hill behaved as though roads remembered it.</p>
+<p>Paths that should have vanished beneath rain and root remained
+passable near its slopes. Distances measured from the hill were
+strangely consistent, even when the neighboring tracks wandered from one
+season to the next. Storm fronts divided around the mound or circled it
+before moving on. Voices carried too well in the lower chambers. The
+dead decayed slowly in certain rooms, and the names of those buried
+there remained in family memory after other names of the same generation
+had been lost.</p>
+<p>The first human road-keepers did not build the oldest passages. They
+found them. Their earliest work was practical: steps cut where the older
+builders had expected no human stride, lamps set into walls that offered
+no sconces, and marks scratched beside junctions whose original signs
+could no longer be read. Only later did reverence grow around the
+place.</p>
+<p>The road-keepers began to bury guides, messengers, and honored dead
+in the chambers nearest the old ways. They painted processions along the
+walls and interpreted the branching diagrams already present there as
+stars. Thus a road station became a funerary house, and a funerary house
+became a sacred place.</p>
+<p>The visible tower came later still. Its builders added watchrooms,
+stores, narrow firing slits, traps, reinforced doors, and a defensible
+crown above the hill. They reused whatever lay beneath because old stone
+is cheaper than new stone and because soldiers are often more willing to
+inherit a mystery than to sleep in the rain.</p>
+<p><em>A correcting hand adds:</em> This is the first rule of Hightower:
+a thing may have been used wisely without being understood, and used
+foolishly for exactly the same reason.</p>
+<hr />
+</section>
+<section id="ii-the-road-beneath-the-road" class="level2">
+<h2>II. The Road Beneath the Road</h2>
+<p>The oldest masonry does not resemble a road in the ordinary sense. It
+offers no broad paving, no milestones, and no comfortable direction from
+one market to another. Yet its chambers are arranged around passage.
+Thresholds, names, arrivals, departures, and the distinction between one
+traveler and the next recur in every surviving sign.</p>
+<p>The priests of Mara called the buried work a road because they lacked
+a better word. Orik Fenstone called it a mechanism because he disliked
+explanations that could not be tested. Both may have been correct.</p>
+<p>Whatever its first builders intended, the work beneath Hightower
+appears to have watched more than bodies crossing a boundary. It
+attended to continuity: whether the person who arrived could still be
+distinguished from the person who entered; whether a name still belonged
+to its speaker; whether memory, form, and intention remained joined
+after a passage.</p>
+<p>This concern explains several otherwise unrelated customs. Travelers
+spoke their names before descending. The dead were recorded even when
+their families had already carried them away. Water was placed where a
+face could be seen in it. Rings marked vows and offices. Sealed tablets
+named those who entered, those who departed, and those who died between
+one place and another.</p>
+<p>The hill did not merely remember that someone had passed. It tried to
+remember who.</p>
+<p>That sentence should not be mistaken for comfort. A lock remembers
+the shape of its key, but no one therefore calls the lock kind.</p>
+<hr />
+</section>
+<section id="iii-maras-house-of-necessary-change" class="level2">
+<h2>III. Mara's House of Necessary Change</h2>
+<p>The servants of Mara inherited Hightower when its older rites had
+become fragments. Their teaching held that change is necessary, but
+change without memory becomes destruction. A traveler may arrive altered
+and still remain answerable for the person who began the journey.</p>
+<p>Under their care, Hightower and the Moon Shrine served as companion
+houses.</p>
+<p>Hightower watched. It identified dangerous alteration, barred
+uncertain passage, and held what it could not safely release.</p>
+<p>The Moon Shrine restored. Through water, witness, memory, and
+repeated names, it helped travelers pass through change without losing
+the thread that made one life continuous with itself.</p>
+<p>The priests did not build the buried work, and their explanations
+were not always accurate. Nevertheless, their rites often worked. They
+understood enough to turn part of an ancient place of confinement into a
+sanctuary. They maintained lamps, water channels, records, and the
+ordered placement of objects in the eastern chamber. Their success
+depended less upon mastery than upon care repeated faithfully.</p>
+<p>Later generations preserved the ceremonies after their reasons had
+thinned. A cup was returned because the cup had always been returned. A
+name was entered because names belonged in the ledger. A lamp was kept
+because darkness in that passage was considered unlucky. This is how
+useful knowledge survives the death of explanation: disguised as
+manners.</p>
+<hr />
+</section>
+<section id="iv-the-chamber-mistaken-for-a-treasury" class="level2">
+<h2>IV. The Chamber Mistaken for a Treasury</h2>
+<p>The eastern chamber is commonly described as an offering room. The
+name is not false, but it has encouraged the wrong question. Visitors
+ask what wealth was given there. The better question is what each object
+was made to remember.</p>
+<p>The oldest mural shows attendants approaching a central star-mark
+with bowls, rings, pearls, and sealed tablets. Later keepers saw
+valuables and built a guarded cache around them. They cut arrow slits
+through older stone, set an iron-banded chest upon a low plinth, and
+defended the room as a treasury. The arrangement survived because the
+objects were protected, though the reason for protecting them was
+forgotten.</p>
+<p>The bowls held clean water. A traveler washed, then looked upon the
+reflection and affirmed that the face was their own. Purification was
+part of the rite, but recognition was the greater purpose.</p>
+<p>The rings marked vows, offices, and spoken identity. Some preserved
+old language. One, remembered as the Ring of the Patient Tongue, allowed
+its bearer to understand inscriptions that would otherwise remain
+silent. It did not grant learning, judgment, or wisdom. It opened a door
+in language and left the wearer responsible for what entered.</p>
+<p>The pearls held more than purchasing value. The surviving accounts
+describe them as vessels for power and, in less certain passages, for
+fragments of memory. A pearl could help sustain the buried work when its
+other channels weakened. Removed from that purpose, it might still yield
+power while giving no sign of what it had once supported.</p>
+<p>The sealed tablets formed a record of passage. They named the living,
+the departed, and the dead. To the later clergy they appeared to be
+prayers. They were prayers, but they were also an accounting by which
+the place distinguished a missing traveler from an unnamed one.</p>
+<p>The focusing crystal upon the central setting distributed light,
+power, and the chamber's records through channels in the floor. Orik
+found those channels warm long after the visible apparatus seemed dead.
+He concluded that the crystal was inactive, not empty.</p>
+<p>The objects were therefore offerings in the oldest sense: things
+placed before a power so that a relationship might be maintained. They
+were not payment. Their number, order, and use kept the sanctuary's
+several duties in balance. When the arrangement was neglected or
+stripped for valuables, the place did not become poorer. It became less
+capable of distinguishing mercy from confinement.</p>
+<p><em>A cramped note in the margin reads:</em> If a sacred room looks
+suspiciously clean, do not improve it by stealing the furniture.</p>
+<hr />
+</section>
+<section id="v-the-warden-without-a-name" class="level2">
+<h2>V. The Warden Without a Name</h2>
+<p>At the deepest guarded threshold stood the being later called the
+Last Warden.</p>
+<p>Temple accounts describe an honored guardian who surrendered his life
+to keep the road secure. The marks beneath those accounts tell a harsher
+story. The Warden had been a bugbear chieftain, captured, killed, and
+reduced to a fixed office. His personal name was removed. His past was
+made unusable. The buried work preserved only three certainties:</p>
+<blockquote>
+<p>I am here.<br />
+This place is mine.<br />
+No one passes.</p>
+</blockquote>
+<p>These were not vows freely renewed. They were the walls of a cell
+made from the prisoner's remaining identity.</p>
+<p>The site restored him when he was broken. Storm and buried power
+returned the guardian to his place because the mechanism recognized the
+office and not the suffering of the creature bound within it. Early
+priests mistook this return for holy endurance. Later priests inherited
+the honorific and ceased asking whom it honored.</p>
+<p>Only one of Mara's servants is known to have rejected the comfortable
+account.</p>
+<hr />
+</section>
+<section id="vi-the-tongue-of-mara" class="level2">
+<h2>VI. The Tongue of Mara</h2>
+<p>The final priestess assigned to Hightower is not named in the
+surviving temple rolls. She is called only the Tongue of Mara, an office
+she held because she wore the Ring of the Patient Tongue and could
+interpret the oldest inscriptions.</p>
+<p>Through those inscriptions she learned what had been done to the
+Warden. He had not offered himself. He had been made useful after death
+and denied even the freedom to understand his own imprisonment. The
+priestess judged that no sanctuary of Mara could preserve such a thing
+and still claim to guide change without destroying the self.</p>
+<p>On a moonless night she entered the transmutation chamber, lit the
+undying braziers, and stood within its circle. Her intended rite was
+bold, compassionate, and badly phrased for the power she addressed. She
+meant to separate the guardian's identity from the road's function,
+permit the captive to die, and transfer the burden of the seal into an
+empty funerary vessel.</p>
+<p>The buried work obeyed the command it understood.</p>
+<p>It separated identity from body.</p>
+<p>The priestess's head tore free without dying. The ring preserved
+comprehension. The road preserved her voice. The transmutation circle
+preserved awareness. None preserved her humanity. Her body remained in
+an upright sarcophagus while her living head grew leathery wings and
+circled the chamber, still attempting to speak the last command of the
+rite.</p>
+<p>The attendants who found her could neither restore nor kill her. They
+sealed the creature beside its body. The ring fell near the sarcophagus,
+beyond the hand that had worn it. In time pain, hunger, and incomplete
+language reduced the attempted command to a shriek.</p>
+<p>This is the origin of the winged horror in Hightower.</p>
+<p>It was not placed there to profane a holy place. It is what remained
+when a holy person asked an ancient mechanism to understand mercy.</p>
+<p>Some part of the old duty appears to survive within the creature. Its
+cry is an attack, but the pattern of its appearances suggests a warning
+as well: it rises when an unprepared traveler approaches the deeper
+seal. Whether the priestess still knows whom she warns cannot be
+established.</p>
+<hr />
+</section>
+<section id="vii-orik-fenstones-unfinished-argument" class="level2">
+<h2>VII. Orik Fenstone's Unfinished Argument</h2>
+<p>Orik Fenstone came to Hightower because roads near the ruin behaved
+badly. He found a weathered star-mark that local memory called the
+Warden's sign and collected accounts of children once forbidden to play
+near similarly marked stones. He concluded that the tower stood upon a
+way-marker, a burial house, and a road-watch, each built after the other
+and each mistaken for the whole.</p>
+<p>His notes distinguish the chambers with unusual economy. The eastern
+room was, in his judgment, too orderly to be abandoned. The western
+chamber was simply wrong.</p>
+<p>There he found the headless body and the failing marks of
+containment. Lacking the Ring of the Patient Tongue, he could not read
+the oldest seal. He reinforced what he could with wax, lampblack, and
+his own blood. The crude additions later found upon the sarcophagus are
+his work, not the work of the first builders.</p>
+<p>He also recognized a recurring phrase in the funerary text, rendered
+in an old rhyme as <em>the tongue that follows the road</em>. He
+suspected that it referred to a key for translation and command. He
+never found the ring and did not live to test the theory.</p>
+<p>Fenstone died of spider venom before completing his concordance. The
+spider and the lesser creatures of the ruin belonged to the ruin's later
+ecology, not its design. This fact is worth stating because scholars
+have an incurable desire to make every rat part of a ritual.</p>
+<p>The present volume owes him its central argument: Hightower cannot be
+understood by asking what one people built there. One must ask what each
+age found, what it added, what it misunderstood, and what continued
+working in spite of them all.</p>
+<hr />
+</section>
+<section id="viii-counsel-for-those-who-must-enter" class="level2">
+<h2>VIII. Counsel for Those Who Must Enter</h2>
+<p>Hightower should not be treated as a dead temple, a mere tomb, or an
+abandoned fort. It has been all three, but the oldest work beneath it
+remains capable of response.</p>
+<p>If the lower chambers must be entered, the surviving customs
+recommend the following:</p>
+<ol type="1">
+<li>Speak your name before crossing the oldest threshold.</li>
+<li>Keep a written account of every person who enters, departs, or dies
+within.</li>
+<li>Do not remove bowls, rings, pearls, tablets, or crystals merely
+because a later keeper placed them in a chest.</li>
+<li>If an object must be moved, record its former place and return it if
+you can.</li>
+<li>Do not mistake preservation for kindness. The place may keep a life,
+a voice, or a duty long after mercy would have let it end.</li>
+<li>If a storm gathers while the sky beyond the hill remains clear,
+assume that Hightower is acting before assuming that the weather is
+strange.</li>
+<li>If a cry rises from the western chamber, retreating may be wisdom
+rather than cowardice. Listen only if you possess the means to
+understand what the cry once was.</li>
+</ol>
+<p>The last leaf bears no conclusion, only a sentence copied in three
+different hands:</p>
+<blockquote>
+<p>A road is safest when it knows where it leads. A traveler is safest
+when the road does not decide who they must remain.</p>
+</blockquote>
+</section>
+</section>
+<section id="book-aunoroch-papers" class="level1">
+<h1>The Aunoroch Papers</h1>
+<section id="selected-accounts-from-the-western-expedition"
+class="level2">
+<h2>Selected Accounts from the Western Expedition</h2>
+<p><em>Copied from</em> A Comparative History of the Western Roads,
+<em>whose compiler claims to have compared surviving journals, military
+correspondence, political testimony, and records sealed after the
+expedition’s return. Several documents disagree on dates, casualties,
+and even the names of those present. The contradictions have been
+preserved.</em></p>
+<p>The official histories call the Aunoroch Expedition an ambitious
+commercial failure. The officers who survived called it an evacuation.
+The laborers called it the third morning, though none agreed which
+morning had been the first.</p>
+<p>Most simply called it the Aunoroch mistake.</p>
+<hr />
+<section id="from-the-field-journal-of-an-assistant-surveyor-name-lost"
+class="level3">
+<h3>From the field journal of an assistant surveyor, name lost</h3>
+<blockquote>
+<p>The road was there again when the sand cleared.</p>
+<p>Not a road laid atop the desert, mind you. The black stones passed
+beneath the old walls without meeting their foundations, and beneath the
+dunes without bending. Sergeant Vask had us drive an iron spike beside
+it so we could judge whether the ground shifted in the night.</p>
+<p>At dawn, the spike stood where we had placed it.</p>
+<p>A second spike lay in the supply tent.</p>
+<p>Both bore the dent where Vask struck them with the back of his
+hammer.</p>
+<p>He ordered the second one thrown into the smelter. By supper, it was
+back in the tent.</p>
+</blockquote>
+<hr />
+</section>
+<section
+id="letter-from-lieutenant-darius-vell-to-the-western-garrison-at-snakemere-gate"
+class="level3">
+<h3>Letter from Lieutenant Darius Vell to the western garrison at
+Snakemere Gate</h3>
+<blockquote>
+<p>Double the water allotment at the Fourth Well and keep three empty
+wagons ready at all times. They are not to be filled with salvage, no
+matter whose seal is placed upon the manifest.</p>
+<p>I am aware that the factors consider empty transport an intolerable
+waste. Inform them that a wagon carrying nothing may yet carry wounded
+men tomorrow. If they object, they may send the objection in writing,
+with their own names plainly signed beneath it.</p>
+<p>We have lost two drovers, one scholar, and perhaps four laborers. I
+say <em>perhaps</em> because this morning’s roll names men whom I
+watched buried yesterday and omits men who are presently eating beside
+my fire.</p>
+<p>Until I understand the discrepancy, accept no casualty list from this
+camp as final.</p>
+</blockquote>
+<p>A later hand, probably Vell’s, added beneath the copy:</p>
+<blockquote>
+<p>Civilians before soldiers. Wounded before cargo. Water before relics.
+A retreat planned too late is only a rout with paperwork.</p>
+</blockquote>
+<hr />
+</section>
+<section id="from-the-private-journal-of-karn-vask-labor-sergeant"
+class="level3">
+<h3>From the private journal of Karn Vask, labor sergeant</h3>
+<blockquote>
+<p>The scholars said the door repaired itself. Old Boom said that was
+wrong. A repaired wall remembers being broken. This one did not.</p>
+<p>We worked on it for four days. On the fifth, there were six days’
+worth of stone piled outside and not a finger’s width missing from the
+entrance.</p>
+<p>The investors were pleased. They saw a quarry that could never empty.
+The officers saw a fort that could never fall. The healers asked whether
+flesh might be made to do the same.</p>
+<p>None of them asked what would happen if the door decided <em>we</em>
+were the damage.</p>
+</blockquote>
+<hr />
+</section>
+<section
+id="extract-from-a-sealed-memorandum-circulated-among-the-expeditions-sponsors"
+class="level3">
+<h3>Extract from a sealed memorandum circulated among the expedition’s
+sponsors</h3>
+<blockquote>
+<p>The restorative properties observed at the site exceed the commercial
+value of all prior recoveries combined. Possible applications include
+the renewal of damaged fortifications, preservation of strategic
+crossings, restoration of expended materiel, and the return of injured
+personnel to an earlier viable condition.</p>
+<p>Lieutenant Vell’s objections are logistical and therefore remediable.
+Warmage Halruun’s objections appear philosophical, though he disguises
+them in technical language.</p>
+<p>Excavation is to continue until the central apparatus can be removed,
+reproduced, or made responsive to authorized command.</p>
+</blockquote>
+<p>The memorandum bears five seals. In surviving copies, three have been
+scraped away. The fourth belongs to a minor house that later denied
+financing the expedition. The fifth is the mark of the Golden
+Ledger.</p>
+<hr />
+</section>
+<section
+id="unsent-letter-found-among-the-effects-of-an-expeditionary-guard"
+class="level3">
+<h3>Unsent letter found among the effects of an expeditionary guard</h3>
+<blockquote>
+<p>Mira,</p>
+<p>I have begun this letter three times. I remember writing the first,
+though I cannot find it. I found the second already folded beneath my
+blanket before I had written it. It says I should not go below
+again.</p>
+<p>Yesterday Pell died when the trench gave way. Today he asked why no
+one had saved him a place at breakfast. I struck him because I thought
+it was some desert thing wearing his face. He cried exactly as Pell
+would cry. By noon everyone remembered the collapse, except Pell.</p>
+<p>Darius says we leave when the next water train arrives. The factors
+say no one leaves until the rings are catalogued. Old Boom has stopped
+shouting, which frightens me worse than when he shouted.</p>
+<p>If another letter reaches you in my hand, compare it to this one. If
+it says I am well, do not believe it merely because I signed my
+name.</p>
+</blockquote>
+<hr />
+</section>
+<section
+id="from-darius-vells-evacuation-order-preserved-in-a-military-copy"
+class="level3">
+<h3>From Darius Vell’s evacuation order, preserved in a military
+copy</h3>
+<blockquote>
+<p>All excavation is suspended. Camp staff not required for withdrawal
+will depart immediately by the western markers. Guards will escort
+laborers, drovers, cooks, and wounded personnel before securing portable
+finds.</p>
+<p>No officer is to delay a person’s evacuation for want of a merchant’s
+release, debt paper, labor contract, or cargo authorization.</p>
+<p>Any order contradicting this one may be delivered to me in
+person.</p>
+</blockquote>
+<p>The final sentence has often been quoted as proof of Vell’s courage.
+The political record treated it as proof of insubordination.</p>
+<hr />
+</section>
+<section id="statement-of-the-golden-ledger-before-the-idylwind-council"
+class="level3">
+<h3>Statement of the Golden Ledger before the Idylwind Council</h3>
+<blockquote>
+<p>The western venture failed following an unauthorized military
+withdrawal during a period of magical instability. Considerable public
+and private property was abandoned. Irreplaceable survey work was lost,
+contracted assets were dispersed, and the orderly recovery of materials
+became impossible.</p>
+<p>Assertions that the expedition discovered an engine capable of
+restoring the dead are the products of grief, desert exposure, and
+opportunistic superstition. Certain unusual artifacts were recovered, as
+is expected in any Netherese salvage operation. These objects were
+secured or transferred to competent religious authorities.</p>
+<p>The Ledger rejects all claims that its representatives placed
+property above life.</p>
+</blockquote>
+<p>No complete transfer manifest survives.</p>
+<hr />
+</section>
+<section
+id="reply-entered-into-the-same-proceeding-by-an-unnamed-delegate-of-the-frontier-settlements"
+class="level3">
+<h3>Reply entered into the same proceeding by an unnamed delegate of the
+frontier settlements</h3>
+<blockquote>
+<p>The Ledger says the venture failed because the soldiers withdrew.</p>
+<p>The soldiers say anyone left inside after the third pulse could no
+longer be counted with certainty.</p>
+<p>The laborers say crates came home bearing the names of men who did
+not.</p>
+<p>The Chapel sealed some of those crates. The Ledger hid others in
+private warehouses. Still others vanished between the bridge and the
+counting house.</p>
+<p>You ask us to accept that nothing unnatural occurred, while your own
+guards wear gloves to handle black glass that remains cold in a
+furnace.</p>
+<p>If this was an ordinary commercial failure, open the records.</p>
+</blockquote>
+<p>The Council declined.</p>
+<hr />
+</section>
+<section id="fragment-attributed-to-warmage-varron-halruun"
+class="level3">
+<h3>Fragment attributed to Warmage Varron Halruun</h3>
+<p>The fragment survives only as a copy of a scorched letter kept by
+Darius Vell. Whether Halruun wrote it before his reported death or after
+his disappearance remains disputed.</p>
+<blockquote>
+<p>Do not turn the wheel beneath the bridge.</p>
+<p>It does not move time. It chooses what the world remembers.</p>
+<p>I have taken the missing tooth. Pray they never find another.</p>
+</blockquote>
+<hr />
+</section>
+<section id="the-compilers-note" class="level3">
+<h3>The compiler’s note</h3>
+<p>No surviving roll gives the same number of people who entered the
+buried complex. No two casualty lists agree. Some veterans returned to
+Snakemere before the first warning of the evacuation arrived. Others
+emerged weeks afterward with no memory of the road home. Several names
+appear in both pension rolls and burial ledgers.</p>
+<p>What can be established is narrower.</p>
+<p>The expedition found a black road beneath the desert. It opened
+something its sponsors mistook for a weapon. Darius Vell abandoned their
+orders and removed everyone he could. Varron Halruun removed some
+necessary part of the apparatus and vanished. The survivors brought home
+black glass, serpent-and-hourglass seals, ritual tablets, and memories
+that did not agree with one another.</p>
+<p>In the years that followed, some survivors gathered in secret to
+compare what they remembered. A few concluded that the expedition had
+escaped a disaster. Others concluded that they had stood before the
+machinery by which an imperfect world might be corrected.</p>
+<p>The latter began calling themselves the Coiled Hour.</p>
+<p>The official account ends with the abandonment of the salvage
+corridor.</p>
+<p>The consequences did not.</p>
+</section>
+</section>
+</section>
+<section id="book-march-keep-intermezzo" class="level1">
+<h1>March Keep Intermezzo</h1>
+<section id="the-keep-at-the-hinge--player-packet" class="level2">
+<h2>The Keep at the Hinge — Player Packet</h2>
+<p>This packet may be read and discussed out of character. It contains
+the part of the world currently open for table-level design and
+political play. It does not require the characters to possess every
+piece of institutional vocabulary used here.</p>
+<p>Tonight has two modes:</p>
+<ul>
+<li><strong>Establish:</strong> The table helps decide what March Keep
+has already been like. The DM may accept, revise, combine, or veto
+suggestions to preserve hidden facts and continuity.</li>
+<li><strong>Act:</strong> The characters try to change how the keep
+operates. These choices meet NPC resistance, require leverage, and
+create consequences in play.</li>
+</ul>
+<p>By the end of the intermezzo, the table should have:</p>
+<ol type="1">
+<li>A usable design for March Keep.</li>
+<li>One political question the characters want to force into the
+open.</li>
+<li>One concrete move they intend to make.</li>
+<li>A clear target for the next prepared session.</li>
+</ol>
+<hr />
+</section>
+<section id="1-brinnas-tour-build-the-keep-as-we-walk" class="level2">
+<h2>1. Brinna's Tour: Build the Keep as We Walk</h2>
+<section id="opening" class="level3">
+<h3>Opening</h3>
+<blockquote>
+<p>Steward Brinna Holt does not wait for the courtyard to become
+quiet.</p>
+<p>She walks with a ring of keys in one hand and a wax tablet in the
+other, pointing without slowing: gatehouse, cistern, command hall,
+ration line, infirmary, south gate.</p>
+<p>“March Keep does not possess spare space,” she says. “It possesses
+space someone has not required yet.”</p>
+<p>Beyond the southern wall, scores of cooking fires mark the refugee
+camp. Inside, a bell rings from the signal tower. Two soldiers carry a
+sealed chest toward the property enclosure while a cook argues that
+whatever is inside the chest cannot be more useful than the grain sacks
+displaced to store it.</p>
+<p>Brinna continues walking.</p>
+<p>“I will show you the keep we have. If you see the keep we need, say
+so before someone dies wishing you had.”</p>
+</blockquote>
+</section>
+<section id="fixed-bones" class="level3">
+<h3>Fixed bones</h3>
+<p>These facts are already established:</p>
+<ul>
+<li>March Keep occupies a narrow ridge. Its interior is roughly
+<strong>180 feet east–west by 145 feet north–south</strong>.</li>
+<li>Its stone walls are credible defenses, reinforced by newer timber
+platforms.</li>
+<li>It was built for roughly <strong>80 soldiers plus support
+staff</strong>.</li>
+<li>It currently holds about <strong>62 regular soldiers</strong>, but
+only about <strong>44</strong> can immediately take a wall or field
+assignment.</li>
+<li>Roughly <strong>22 support staff</strong> and <strong>20–25 refugee
+auxiliaries</strong> keep it functioning.</li>
+<li>Approximately <strong>240–260 Snakemere refugees</strong> live
+outside the southern wall in the South Ditch, also called the Canvas
+Ward.</li>
+<li>If the keep is seriously attacked, there is not enough protected
+space for everyone.</li>
+<li>The western gate is the principal public entrance. A smaller eastern
+postern serves riders and controlled departures. The southern gate
+connects the fort to the refugee camp.</li>
+<li>Maron is held inside as both a prisoner and a protected
+witness.</li>
+</ul>
+<p>Everything below is a working design. Rearrange or reinterpret it if
+the table finds a stronger answer.</p>
+</section>
+<section id="tour-stops-and-design-knobs" class="level3">
+<h3>Tour stops and design knobs</h3>
+<p>At each stop, establish at least <strong>one physical detail</strong>
+and <strong>one social fact</strong>. The political prompt is something
+the characters may later try to change.</p>
+<section id="stop-1-western-approach-and-gatehouse" class="level4">
+<h4>Stop 1: Western approach and gatehouse</h4>
+<p><strong>Required functions:</strong> wagon inspection, alarm bell,
+guardroom, evidence intake, access to the wall walk.</p>
+<p><strong>People:</strong> Biggs, the competent and dry gate guard;
+Wedge, his friendly partner who attempted a truth-and-liar riddle
+without first deciding which guard would lie.</p>
+<p><strong>Establish:</strong></p>
+<ul>
+<li>What makes this look like a frontier checkpoint rather than a city
+gate?</li>
+<li>What improvised defense has been added since Snakemere fell?</li>
+<li>What admission custom reveals whether the keep values control,
+hospitality, or speed?</li>
+</ul>
+<p><strong>Political pressure:</strong> Who is admitted, searched,
+disarmed, delayed, or turned away—and who has authority to make
+exceptions?</p>
+</section>
+<section id="stop-2-central-yard-and-cistern" class="level4">
+<h4>Stop 2: Central yard and cistern</h4>
+<p><strong>Required functions:</strong> muster ground, ration line,
+wagon traffic, public announcements, water access.</p>
+<p>Four boards compete for attention:</p>
+<ul>
+<li>Missing people</li>
+<li>Regional contracts</li>
+<li>Ration and labor assignments</li>
+<li>Orders and public notices</li>
+</ul>
+<p><strong>Establish:</strong></p>
+<ul>
+<li>Which board occupies the most prominent position?</li>
+<li>What activity makes the yard feel overcrowded today?</li>
+<li>What protected or ceremonial feature has been repurposed for
+emergency work?</li>
+</ul>
+<p><strong>Political pressure:</strong> Space on a public board
+determines which problems appear official and which remain private
+grief.</p>
+</section>
+<section id="stop-3-command-hall-signal-tower-and-holding-corridor"
+class="level4">
+<h4>Stop 3: Command hall, signal tower, and holding corridor</h4>
+<p><strong>Required functions:</strong> Maeric's office, route maps,
+dispatches, witnessed testimony, signal equipment, cells, and Maron's
+guarded room.</p>
+<p><strong>Establish:</strong></p>
+<ul>
+<li>How visible is the holding corridor from the working parts of the
+keep?</li>
+<li>Is testimony normally heard privately, before selected witnesses, or
+where the yard can listen?</li>
+<li>What feature makes clear that March Keep is prepared for military
+emergencies but not major civil trials?</li>
+</ul>
+<p><strong>Political pressure:</strong> Maeric controls custody. Brinna
+controls records and access. Neither possesses uncontested authority to
+issue a final judgment against an Idylwind charter officer.</p>
+</section>
+<section id="stop-4-quartermaster-armory-and-property-enclosure"
+class="level4">
+<h4>Stop 4: Quartermaster, armory, and property enclosure</h4>
+<p><strong>Required functions:</strong> food, tools, weapons, tents,
+captured equipment, refugee property, and disputed Golden Ledger
+cargo.</p>
+<p><strong>Establish:</strong></p>
+<ul>
+<li>What supply is visibly closest to running out?</li>
+<li>How are personal property, military salvage, criminal evidence, and
+Ledger cargo kept distinct?</li>
+<li>What item is technically evidence but obviously useful right
+now?</li>
+</ul>
+<p><strong>Political pressure:</strong> Every sealed sack preserves
+evidence. Every opened sack may feed people. “Do not touch it” is also a
+decision about who goes without.</p>
+</section>
+<section id="stop-5-barracks-mess-and-guest-loft" class="level4">
+<h4>Stop 5: Barracks, mess, and guest loft</h4>
+<p><strong>Required functions:</strong> soldier bunks, communal meals,
+transient quarters, and two former junior-officer rooms assigned to the
+party.</p>
+<p><strong>Establish:</strong></p>
+<ul>
+<li>Which groups eat together, and which remain separated?</li>
+<li>What has been moved, rationed, or improvised to make room?</li>
+<li>What harmless argument has become strangely important because
+everyone is exhausted?</li>
+</ul>
+<p><strong>Political pressure:</strong> Sleeping and eating arrangements
+reveal whether refugee auxiliaries are treated as defenders, laborers,
+guests, or a population being managed.</p>
+</section>
+<section id="stop-6-chapel-infirmary" class="level4">
+<h4>Stop 6: Chapel-infirmary</h4>
+<p><strong>Required functions:</strong> treatment cots, medicines,
+oath-taking, death records, private protection, and the Threefold
+shrine.</p>
+<p>The shrine expresses three questions:</p>
+<ul>
+<li><strong>Aor, the Sun:</strong> What is true and lawful?</li>
+<li><strong>Mara, the Moon:</strong> What must be preserved through
+change?</li>
+<li><strong>Serath, the Star:</strong> Where does this choice lead?</li>
+</ul>
+<p><strong>Establish:</strong></p>
+<ul>
+<li>How are the three parts of the shrine physically represented?</li>
+<li>What ordinary medical or clerical work happens inside each sacred
+space?</li>
+<li>Where can a vulnerable person be protected without being treated as
+a prisoner?</li>
+</ul>
+<p><strong>Political pressure:</strong> Kellin can be treated as a child
+under sanctuary, a protected witness, a ward of an institution, or a
+strategic magical asset. Those descriptions grant different people
+authority over him.</p>
+</section>
+<section id="stop-7-smithy-stable-and-eastern-postern" class="level4">
+<h4>Stop 7: Smithy, stable, and eastern postern</h4>
+<p><strong>Required functions:</strong> repairs, wagon fittings, tools,
+messenger horses, scouting dispatches, and a controlled exit.</p>
+<p><strong>Establish:</strong></p>
+<ul>
+<li>What repair backlog visibly obstructs normal work?</li>
+<li>How many usable mounts remain, and what are they being preserved
+for?</li>
+<li>What can leave through the postern without attracting attention from
+the main yard?</li>
+</ul>
+<p><strong>Political pressure:</strong> A repaired wagon can retrieve
+refugees, move grain, support a patrol, or carry a delegation. A rested
+horse can scout a road or carry a legal demand. Priority is policy
+wearing work clothes.</p>
+</section>
+<section id="stop-8-south-gate-canvas-ward-and-graves" class="level4">
+<h4>Stop 8: South gate, Canvas Ward, and graves</h4>
+<p><strong>Required functions:</strong> controlled camp access, labor
+assignments, water queues, cookfires, missing-person work, burial, and
+night watch.</p>
+<p><strong>Establish:</strong></p>
+<ul>
+<li>Can the refugees see into the keep, and can the garrison see into
+the camp?</li>
+<li>Who controls movement through the southern gate?</li>
+<li>What part of the camp has become civic rather than temporary despite
+everyone still calling it temporary?</li>
+</ul>
+<p><strong>Political pressure:</strong> The wall protects the refugees
+and excludes them at the same time. Their location outside it affects
+their safety, political standing, and ability to be heard.</p>
+</section>
+</section>
+<section id="layout-worksheet" class="level3">
+<h3>Layout worksheet</h3>
+<p>The entrances and ridge are fixed; the exact arrangement is not.
+Place the required functions as the tour establishes them.</p>
+<table>
+<thead>
+<tr class="header">
+<th>Zone</th>
+<th>Fixed anchor</th>
+<th>What the table places or defines</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><strong>Western approach</strong></td>
+<td>Main public and wagon gate</td>
+<td>Inspection works, guard facilities, first impression</td>
+</tr>
+<tr class="even">
+<td><strong>High or northern edge</strong></td>
+<td>Best position for signals and observation</td>
+<td>Command, records, holding, armory, or another protected
+function</td>
+</tr>
+<tr class="odd">
+<td><strong>Central enclosure</strong></td>
+<td>Yard and principal cistern</td>
+<td>Public boards, traffic routes, queues, gathering space</td>
+</tr>
+<tr class="even">
+<td><strong>Eastern edge</strong></td>
+<td>Rider postern</td>
+<td>Stable, smithy, repair yard, discreet movement</td>
+</tr>
+<tr class="odd">
+<td><strong>Southern interior</strong></td>
+<td>Gate to the Canvas Ward</td>
+<td>Chapel, barracks, mess, work court, or other shared functions</td>
+</tr>
+<tr class="even">
+<td><strong>Outside the south wall</strong></td>
+<td>Refugee camp, water points, and graves</td>
+<td>Civic center, watches, households, markets, missing-person work</td>
+</tr>
+</tbody>
+</table>
+<p>Then settle four relationships:</p>
+<ul>
+<li>Which two places require the fastest connection?</li>
+<li>Which route is most public?</li>
+<li>Which route is restricted?</li>
+<li>Where does ordinary traffic become a dangerous bottleneck during an
+attack?</li>
+</ul>
+</section>
+<section id="tour-result" class="level3">
+<h3>Tour result</h3>
+<p>Record the table's answers before leaving design mode:</p>
+<table>
+<thead>
+<tr class="header">
+<th>Question</th>
+<th>Table answer</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>March Keep's most distinctive physical feature</td>
+<td></td>
+</tr>
+<tr class="even">
+<td>The most contested doorway or boundary</td>
+<td></td>
+</tr>
+<tr class="odd">
+<td>The resource closest to failure</td>
+<td></td>
+</tr>
+<tr class="even">
+<td>The place where different groups actually mix</td>
+<td></td>
+</tr>
+<tr class="odd">
+<td>The keep's most dangerous defensive weakness</td>
+<td></td>
+</tr>
+<tr class="even">
+<td>One old feature now serving a new purpose</td>
+<td></td>
+</tr>
+<tr class="odd">
+<td>One detail Brinna considers obvious that outsiders would not</td>
+<td></td>
+</tr>
+</tbody>
+</table>
+<hr />
+</section>
+</section>
+<section id="2-why-everyone-can-claim-march-keep" class="level2">
+<h2>2. Why Everyone Can Claim March Keep</h2>
+<p>March Keep stands where several systems of authority stop fitting
+together.</p>
+<ul>
+<li>It is built on land claimed by the <strong>March
+Crown</strong>.</li>
+<li>Its castellan is nominated by the Crown but commissioned by
+<strong>Idylwind's High Bench</strong>.</li>
+<li>It is supplied through Idylwind's <strong>Chamber of
+Routes</strong>, where the Golden Ledger holds enormous influence.</li>
+<li>It protects farms and roads whose food comes from <strong>King's
+Field</strong>.</li>
+<li>Those roads cross older grazing and travel corridors claimed by the
+<strong>western steppe banners</strong>.</li>
+<li>It now shelters survivors of <strong>Snakemere</strong>, a
+settlement Idylwind calls a charter holding and the refugees call their
+home.</li>
+</ul>
+<p>No single institution can command everything March Keep needs. This
+is why political action is possible: each power possesses something the
+others cannot simply take.</p>
+<section id="the-immediate-powers" class="level3">
+<h3>The immediate powers</h3>
+<table>
+<thead>
+<tr class="header">
+<th>Power</th>
+<th>What it wants now</th>
+<th>What it can provide or obstruct</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><strong>March Keep and Castellan Maeric Thornvale</strong></td>
+<td>Stabilize the refugees, open a road, understand the goblin threat,
+protect Kellin, and prevent both Maron's lynching and her quiet
+removal</td>
+<td>Custody, sanctuary, military contracts, patrol information, limited
+supplies</td>
+</tr>
+<tr class="even">
+<td><strong>Snakemere refugees</strong></td>
+<td>Recognition as a people, missing-person searches, restitution, land,
+and a public account of the evacuation</td>
+<td>Testimony, labor, local knowledge, cooperation, and moral
+legitimacy</td>
+</tr>
+<tr class="odd">
+<td><strong>Idylwind's High Bench</strong></td>
+<td>Valid jurisdiction, reliable testimony, and lawful judgment of
+public officers</td>
+<td>Magistrates, warrants, compulsory process, and judgments enforceable
+throughout Idylwind's charter system</td>
+</tr>
+<tr class="even">
+<td><strong>Golden Ledger</strong></td>
+<td>Protect its charter, records, convoy system, and officer—or separate
+itself from her if necessary</td>
+<td>Grain, medicine, tools, wagons, credit, advocates, and commercial
+records</td>
+</tr>
+<tr class="odd">
+<td><strong>Ward Assembly of Idylwind</strong></td>
+<td>Refugee relief, sanitation, placement, and public order</td>
+<td>Relief workers, civic sponsorship, registries, and political
+representation inside Idylwind</td>
+</tr>
+<tr class="even">
+<td><strong>March Crown and King’s Field</strong></td>
+<td>Preserve the Lower March without surrendering royal authority or
+exhausting winter and seed grain</td>
+<td>Titles, rural levies, grain, wagons, draft animals, and recognition
+of land claims</td>
+</tr>
+<tr class="odd">
+<td><strong>Western steppe banners</strong></td>
+<td>Restore grazing corridors and prevent “temporary” settlement from
+becoming permanent dispossession</td>
+<td>Riders, scouts, horses, alternate routes, and renewed regional
+compacts</td>
+</tr>
+<tr class="even">
+<td><strong>Triune clergy</strong></td>
+<td>Ensure that truth, human cost, and future consequence are considered
+together</td>
+<td>Oaths, records, sanctuary, healing, and religious legitimacy</td>
+</tr>
+</tbody>
+</table>
+<hr />
+</section>
+</section>
+<section id="3-the-maron-crisis" class="level2">
+<h2>3. The Maron Crisis</h2>
+<section id="what-is-already-known" class="level3">
+<h3>What is already known</h3>
+<ul>
+<li>Maron was the Golden Ledger's senior factor at Snakemere.</li>
+<li>She controlled commercial wagons, stores, teamsters, guards,
+expedition records, and strategic cargo.</li>
+<li>During the evacuation, Ledger property remained attached to wagons
+and guards while civilians were denied unrestricted access.</li>
+<li>Some refugee groups departed late, fragmented, or without adequate
+protection. People died, disappeared, or were captured on the
+roads.</li>
+<li>Some of the preserved cargo now feeds and equips survivors at March
+Keep.</li>
+<li>Maron is unarmed and confined. She is also one of the most important
+surviving witnesses to the evacuation and the policies behind it.</li>
+<li>March Keep can investigate the failure and maintain custody. Its
+power to deliver a final sentence against an Idylwind charter officer is
+disputed.</li>
+<li>Advocate Selde Orlan and an organized Golden Ledger delegation are
+expected from the east. They will seek Maron's transfer and discuss
+grain, medicine, tools, credit, and support for the camp.</li>
+</ul>
+</section>
+<section id="what-remains-genuinely-unresolved" class="level3">
+<h3>What remains genuinely unresolved</h3>
+<ul>
+<li>Which orders came from Maron and which came from officials above
+her?</li>
+<li>How much discretion did she possess once the evacuation began?</li>
+<li>What did each protected load contain?</li>
+<li>Which wagons could actually have carried more people?</li>
+<li>Were manifests or priority markings altered?</li>
+<li>How many people survived because the cargo reached March Keep?</li>
+<li>Can Maron's testimony establish institutional responsibility beyond
+her own choices?</li>
+<li>What does justice owe the refugees besides, or instead of, a
+sentence against one person?</li>
+</ul>
+</section>
+<section id="the-three-claims-to-authority" class="level3">
+<h3>The three claims to authority</h3>
+<ol type="1">
+<li><strong>March Keep:</strong> It holds Maron, shelters the survivors,
+protects the affected roads, and inherited the consequences of
+Snakemere's collapse.</li>
+<li><strong>Idylwind:</strong> Maron acted as a charter officer over
+Idylwind property and contracted personnel, so only a recognized
+Idylwind tribunal can issue a binding judgment.</li>
+<li><strong>The refugees:</strong> Snakemere became their home, and the
+institution that designed the evacuation policy cannot possess the
+exclusive right to judge it.</li>
+</ol>
+<p>These claims can be combined, negotiated, or forced into conflict.
+None automatically answers whether Maron is guilty.</p>
+</section>
+<section id="political-knobs-the-characters-can-turn" class="level3">
+<h3>Political knobs the characters can turn</h3>
+<p>These are not mutually exclusive menu options. A proposal becomes
+stronger when it identifies who must agree, what they receive, and what
+happens if they refuse.</p>
+<table>
+<thead>
+<tr class="header">
+<th>Knob</th>
+<th>Possible moves</th>
+<th>Pressure created</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><strong>Who judges?</strong></td>
+<td>Support Maeric's March Inquest; request High Bench magistrates;
+demand a mixed tribunal; permit transfer under conditions</td>
+<td>Local urgency competes with enforceable legitimacy</td>
+</tr>
+<tr class="even">
+<td><strong>Who has standing?</strong></td>
+<td>Hear individual witnesses; recognize elected camp speakers;
+constitute a provisional Snakemere council; treat the matter as an
+officer discipline case</td>
+<td>Determines whether refugees are citizens with claims or merely
+sources of evidence</td>
+</tr>
+<tr class="odd">
+<td><strong>What is the proceeding for?</strong></td>
+<td>Establish criminal guilt; produce a public history; recover missing
+people; trace responsibility upward; secure restitution; decide
+Snakemere's future</td>
+<td>Different goals require different evidence and create different
+winners</td>
+</tr>
+<tr class="even">
+<td><strong>Public or controlled?</strong></td>
+<td>Open testimony in the yard; selected witnesses; sealed documentary
+review; publish findings afterward</td>
+<td>Publicity protects against burial but can inflame the camp, expose
+witnesses, or spread dangerous information</td>
+</tr>
+<tr class="odd">
+<td><strong>What happens to the cargo?</strong></td>
+<td>Keep it sealed; inventory it publicly; consume essential supplies
+while preserving records; confiscate it provisionally</td>
+<td>Evidence, ownership, and immediate survival collide</td>
+</tr>
+<tr class="even">
+<td><strong>How is aid handled?</strong></td>
+<td>Accept relief without conceding custody; condition cooperation on
+public process; separate humanitarian aid from Ledger negotiation;
+reject aid tied to transfer</td>
+<td>The keep needs material support, but dependence creates
+leverage</td>
+</tr>
+<tr class="odd">
+<td><strong>What is Maron's status?</strong></td>
+<td>Prisoner; protected witness; accused officer; bargaining asset;
+source against higher officials</td>
+<td>The chosen description changes her rights, security, and
+usefulness</td>
+</tr>
+<tr class="even">
+<td><strong>What remedy matters?</strong></td>
+<td>Execution; imprisonment; removal from office; restitution; asset
+seizure; charter reform; public confession; institutional inquiry</td>
+<td>Punishing Maron and changing the system are related but not
+identical projects</td>
+</tr>
+</tbody>
+</table>
+<hr />
+</section>
+</section>
+<section id="4-other-knobs-within-reach" class="level2">
+<h2>4. Other Knobs Within Reach</h2>
+<section id="refugee-government" class="level3">
+<h3>Refugee government</h3>
+<p>The Canvas Ward already contains households, work crews, cooks,
+burial workers, missing-person records, guards, and people who speak for
+groups of survivors. The characters can support its development
+into:</p>
+<ul>
+<li>A temporary camp administered by March Keep</li>
+<li>An elected refugee council</li>
+<li>A provisional continuation of Snakemere's civic community</li>
+<li>Several independent household and work associations</li>
+</ul>
+<p>This affects who may negotiate, testify, receive property, request
+land, and speak for the dead or missing.</p>
+</section>
+<section id="space-inside-the-walls" class="level3">
+<h3>Space inside the walls</h3>
+<p>The keep cannot shelter everyone. The characters can propose
+priorities for protected space:</p>
+<ul>
+<li>Wounded people</li>
+<li>Children and caregivers</li>
+<li>Witnesses and records</li>
+<li>Refugee auxiliaries</li>
+<li>Food and medicine</li>
+<li>Horses and wagons</li>
+<li>Prisoners and disputed property</li>
+</ul>
+<p>Any priority says something about which future the keep intends to
+preserve.</p>
+</section>
+<section id="kellins-protection" class="level3">
+<h3>Kellin's protection</h3>
+<p>Kellin is a child, a survivor, and the subject of unusual magical
+attention. The characters can influence:</p>
+<ul>
+<li>Who may examine or question him</li>
+<li>Whether the chapel, Maeric, Idylwind, or his chosen protectors hold
+authority</li>
+<li>Whether information about him is recorded, restricted, or
+deliberately obscured</li>
+<li>Whether he travels to the Star Shrine</li>
+</ul>
+<p>Protection can become possession while everyone involved continues
+calling it protection.</p>
+</section>
+<section id="the-next-road" class="level3">
+<h3>The next road</h3>
+<p>March Keep cannot solve every regional threat simultaneously. Three
+substantial directions are already visible:</p>
+<table>
+<thead>
+<tr class="header">
+<th>Direction</th>
+<th>Immediate value</th>
+<th>Political consequence</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><strong>Break the Side-Cut toll den</strong></td>
+<td>Reopen the nearest road, recover prisoners and supplies</td>
+<td>Challenges Rusk Veyr's attempt to turn extortion into recognized
+road authority</td>
+</tr>
+<tr class="even">
+<td><strong>Find the goblin staging area</strong></td>
+<td>Learn whether Grazzuk was an isolated raider or part of coordinated
+pressure</td>
+<td>May open conflict or negotiation over Grazzuk's staff, followers,
+caches, and rivals</td>
+</tr>
+<tr class="odd">
+<td><strong>Escort Kellin to the Star Shrine</strong></td>
+<td>Investigate the route-pattern connected to Hightower and
+Snakemere</td>
+<td>Makes Kellin's status and the control of ancient knowledge a
+regional issue</td>
+</tr>
+</tbody>
+</table>
+<p>Choosing one allows the other two situations to continue
+changing.</p>
+<hr />
+</section>
+</section>
+<section id="5-people-who-can-move-something" class="level2">
+<h2>5. People Who Can Move Something</h2>
+<table>
+<thead>
+<tr class="header">
+<th>Person</th>
+<th>Present authority or leverage</th>
+<th>The kind of proposal they take seriously</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><strong>Castellan Maeric Thornvale</strong></td>
+<td>Custody, patrols, contracts, military access</td>
+<td>A concrete action that reduces one threat without promising to solve
+the entire region</td>
+</tr>
+<tr class="even">
+<td><strong>Steward Brinna Holt</strong></td>
+<td>Records, rooms, property, schedules, access</td>
+<td>A proposal that names the people, goods, space, and work it will
+require</td>
+</tr>
+<tr class="odd">
+<td><strong>Sister Halwen Dorr</strong></td>
+<td>Oaths, sanctuary, infirmary, death and missing-person records</td>
+<td>A process that distinguishes what is known from what is merely
+comforting or useful</td>
+</tr>
+<tr class="even">
+<td><strong>Nera Ashcombe</strong></td>
+<td>Refugee organization, weighhouse knowledge, public credibility</td>
+<td>Material accountability and a record that cannot be quietly
+removed</td>
+</tr>
+<tr class="odd">
+<td><strong>Maron</strong></td>
+<td>Convoy memory, manifests, institutional knowledge, her own
+testimony</td>
+<td>Exact questions that do not require her to become either innocent or
+monstrous</td>
+</tr>
+<tr class="even">
+<td><strong>Quartermaster Tessa Grell</strong></td>
+<td>Inventory, ration pressure, supply feasibility</td>
+<td>Numbers, priorities, and an answer to what should be displaced</td>
+</tr>
+<tr class="odd">
+<td><strong>Magister Edria Pell</strong></td>
+<td>Magical and archival expertise</td>
+<td>Careful uncertainty, protected examination, and evidence with
+provenance</td>
+</tr>
+<tr class="even">
+<td><strong>Advocate Selde Orlan</strong></td>
+<td>Ledger law, transfer demand, access to aid and records</td>
+<td>Terms that preserve charter authority, commercial continuity, or a
+defensible precedent</td>
+</tr>
+</tbody>
+</table>
+<hr />
+</section>
+<section id="6-convert-a-position-into-a-move" class="level2">
+<h2>6. Convert a Position Into a Move</h2>
+<p>“Maron should receive justice” is a position. A political move
+identifies an actor, a demand, leverage, and an acceptable cost.</p>
+<p>Complete this together when the table leaves design mode:</p>
+<table>
+<thead>
+<tr class="header">
+<th>Element</th>
+<th>Decision</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><strong>We want</strong></td>
+<td></td>
+</tr>
+<tr class="even">
+<td><strong>We will ask or pressure</strong></td>
+<td></td>
+</tr>
+<tr class="odd">
+<td><strong>We can offer</strong></td>
+<td></td>
+</tr>
+<tr class="even">
+<td><strong>We need support from</strong></td>
+<td></td>
+</tr>
+<tr class="odd">
+<td><strong>The evidence we need first</strong></td>
+<td></td>
+</tr>
+<tr class="even">
+<td><strong>The cost we will accept</strong></td>
+<td></td>
+</tr>
+<tr class="odd">
+<td><strong>The outcome we refuse</strong></td>
+<td></td>
+</tr>
+<tr class="even">
+<td><strong>Our first visible action</strong></td>
+<td></td>
+</tr>
+</tbody>
+</table>
+<p>Possible first actions include:</p>
+<ul>
+<li>Ask Maeric to authorize an interview, inspection, or public
+hearing.</li>
+<li>Ask Brinna to preserve, copy, compare, or release a record.</li>
+<li>Help the refugees select representatives and formulate a
+petition.</li>
+<li>Request High Bench magistrates while insisting that testimony be
+taken at March Keep.</li>
+<li>Negotiate with Selde over aid, custody, witnesses, or access to
+records.</li>
+<li>Inventory disputed cargo before deciding what must be consumed.</li>
+<li>Place Kellin under a clearly defined form of sanctuary.</li>
+<li>Send a message to the Ward Assembly, Crown, King’s Field, or another
+regional power.</li>
+<li>Commit to one road mission because of the leverage its success would
+create.</li>
+</ul>
+<hr />
+</section>
+<section id="7-end-of-intermezzo-record" class="level2">
+<h2>7. End of Intermezzo Record</h2>
+<p>The purpose of this record is to tell the DM what deserves full
+preparation next—not to settle every issue tonight.</p>
+<table>
+<thead>
+<tr class="header">
+<th>Decision</th>
+<th>Table answer</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Keep details established as canon</td>
+<td></td>
+</tr>
+<tr class="even">
+<td>Political question we care about most</td>
+<td></td>
+</tr>
+<tr class="odd">
+<td>First political move</td>
+<td></td>
+</tr>
+<tr class="even">
+<td>NPC or institution we will approach</td>
+<td></td>
+</tr>
+<tr class="odd">
+<td>Scene we want played in full</td>
+<td></td>
+</tr>
+<tr class="even">
+<td>Evidence or answer we intend to seek</td>
+<td></td>
+</tr>
+<tr class="odd">
+<td>Regional mission currently favored</td>
+<td></td>
+</tr>
+<tr class="even">
+<td>What the DM should prepare next</td>
+<td></td>
+</tr>
+</tbody>
+</table>
+<p>The campaign resumes from whatever the table chooses to make
+urgent.</p>
+</section>
+</section>
+      </div>
+
+      <nav class="book-pager" id="bookPager" aria-label="Previous and next volume" hidden>
+        <button class="text-button" id="previousBook" type="button"></button>
+        <button class="text-button" id="nextBook" type="button"></button>
+      </nav>
+    </main>
+  </div>
+
+  <button class="icon-button back-to-top" id="backToTop" type="button" aria-label="Back to the beginning of this volume">↑</button>
+
+  <section class="search-layer" id="searchLayer" role="dialog" aria-modal="true" aria-label="Search the player archive" hidden>
+    <div class="search-box">
+      <div class="search-box__head">
+        <input class="search-input" id="searchInput" type="search" inputmode="search" autocomplete="off" aria-label="Search the player archive" placeholder="Search names, places, events…">
+        <button class="icon-button" id="closeSearchButton" type="button" aria-label="Close search">×</button>
+      </div>
+      <p class="search-status" id="searchStatus">Type at least two characters to search all four volumes.</p>
+      <div class="search-results" id="searchResults"></div>
+    </div>
+  </section>
+
+  <script>
+    (function () {
+      "use strict";
+
+      var storagePrefix = "lower-march-player-archive:";
+      var descriptions = {
+        "The Chronicles": "The company’s journey, voices from March Keep, rumors, and books from its shelves.",
+        "Hightower Beneath Hightower": "A concordance of the road-watch, the Moon Sanctuary, and the ruin below.",
+        "The Aunoroch Papers": "Conflicting accounts from the western expedition and the disaster it left behind.",
+        "March Keep Intermezzo": "A player workbook for shaping the keep and deciding what its defenders do next."
+      };
+
+      var body = document.body;
+      var reader = document.getElementById("reader");
+      var welcome = document.getElementById("library");
+      var content = document.getElementById("bookContent");
+      var books = Array.prototype.slice.call(content.querySelectorAll(":scope > section.level1"));
+      var bookNav = document.getElementById("bookNav");
+      var chapterNav = document.getElementById("chapterNav");
+      var bookCards = document.getElementById("bookCards");
+      var bookPager = document.getElementById("bookPager");
+      var previousBook = document.getElementById("previousBook");
+      var nextBook = document.getElementById("nextBook");
+      var currentBookLabel = document.getElementById("currentBookLabel");
+      var progressBar = document.getElementById("progressBar");
+      var backToTop = document.getElementById("backToTop");
+      var menuButton = document.getElementById("menuButton");
+      var sidebar = document.getElementById("sidebar");
+      var searchLayer = document.getElementById("searchLayer");
+      var searchInput = document.getElementById("searchInput");
+      var searchResults = document.getElementById("searchResults");
+      var searchStatus = document.getElementById("searchStatus");
+      var activeBook = null;
+      var lastFocus = null;
+      var searchIndex = [];
+
+      function directHeading(book) {
+        return book.querySelector(":scope > h1");
+      }
+
+      function titleOf(book) {
+        var heading = directHeading(book);
+        return heading ? heading.textContent.trim() : "Untitled volume";
+      }
+
+      function wordsIn(book) {
+        var words = book.textContent.trim().split(/\s+/).filter(Boolean);
+        return words.length;
+      }
+
+      function closeDrawer() {
+        body.classList.remove("drawer-open");
+        menuButton.setAttribute("aria-expanded", "false");
+      }
+
+      function openDrawer() {
+        body.classList.add("drawer-open");
+        menuButton.setAttribute("aria-expanded", "true");
+        var current = bookNav.querySelector("[aria-current='page']");
+        if (current) current.focus();
+      }
+
+      function updateHistory(id, replace) {
+        var hash = "#" + id;
+        if (location.hash === hash) return;
+        if (replace) history.replaceState(null, "", hash);
+        else history.pushState(null, "", hash);
+      }
+
+      function bookForElement(element) {
+        var node = element;
+        while (node && node !== content) {
+          if (books.indexOf(node) !== -1) return node;
+          node = node.parentElement;
+        }
+        return null;
+      }
+
+      function scrollToNode(node) {
+        window.requestAnimationFrame(function () {
+          node.scrollIntoView({ behavior: "smooth", block: "start" });
+        });
+      }
+
+      function setCurrentNav(id) {
+        Array.prototype.forEach.call(bookNav.querySelectorAll("button"), function (button) {
+          if (button.dataset.target === id) button.setAttribute("aria-current", "page");
+          else button.removeAttribute("aria-current");
+        });
+      }
+
+      function buildChapterNav(book) {
+        chapterNav.replaceChildren();
+        if (!book) {
+          var note = document.createElement("span");
+          note.className = "sidebar__hint";
+          note.textContent = "Open a volume to see its chapters.";
+          chapterNav.appendChild(note);
+          return;
+        }
+
+        var headings = Array.prototype.slice.call(book.querySelectorAll("h2, h3"));
+        headings.forEach(function (heading) {
+          if (!heading.id) return;
+          var link = document.createElement("a");
+          link.href = "#" + heading.id;
+          link.textContent = heading.textContent;
+          link.className = "depth-" + heading.tagName.slice(1);
+          link.addEventListener("click", function (event) {
+            event.preventDefault();
+            updateHistory(heading.id, false);
+            scrollToNode(heading);
+            closeDrawer();
+          });
+          chapterNav.appendChild(link);
+        });
+      }
+
+      function updatePager(book) {
+        if (!book) {
+          bookPager.hidden = true;
+          return;
+        }
+        var index = books.indexOf(book);
+        bookPager.hidden = false;
+        previousBook.hidden = index <= 0;
+        nextBook.hidden = index >= books.length - 1;
+        if (index > 0) previousBook.textContent = "← " + titleOf(books[index - 1]);
+        if (index < books.length - 1) nextBook.textContent = titleOf(books[index + 1]) + " →";
+      }
+
+      function showLibrary(options) {
+        options = options || {};
+        activeBook = null;
+        welcome.hidden = false;
+        books.forEach(function (book) { book.classList.remove("is-active"); });
+        currentBookLabel.textContent = "Player edition";
+        setCurrentNav("library");
+        buildChapterNav(null);
+        updatePager(null);
+        updateProgress();
+        closeDrawer();
+        if (options.history !== false) updateHistory("library", !!options.replace);
+        if (options.scroll !== false) scrollToNode(welcome);
+      }
+
+      function activateBook(book, options) {
+        options = options || {};
+        if (!book) return;
+        activeBook = book;
+        welcome.hidden = true;
+        books.forEach(function (item) { item.classList.toggle("is-active", item === book); });
+        var title = titleOf(book);
+        currentBookLabel.textContent = title;
+        setCurrentNav(book.id);
+        buildChapterNav(book);
+        updatePager(book);
+        updateProgress();
+        closeDrawer();
+        try { localStorage.setItem(storagePrefix + "last-book", book.id); } catch (error) {}
+        if (options.history !== false) updateHistory(book.id, !!options.replace);
+        if (options.scroll !== false) scrollToNode(book);
+      }
+
+      function navigateToId(id, replace) {
+        if (!id || id === "library") {
+          showLibrary({ history: true, replace: replace });
+          return;
+        }
+        var target = document.getElementById(id);
+        if (!target) {
+          showLibrary({ history: true, replace: true, scroll: false });
+          return;
+        }
+        var book = bookForElement(target);
+        if (book) {
+          activateBook(book, { history: false, scroll: false });
+          window.requestAnimationFrame(function () { target.scrollIntoView({ block: "start" }); });
+        }
+      }
+
+      function makeBookButton(book, index) {
+        var title = titleOf(book);
+        var button = document.createElement("button");
+        button.type = "button";
+        button.dataset.target = book.id;
+        button.textContent = (index + 1) + ". " + title;
+        button.addEventListener("click", function () { activateBook(book); });
+        return button;
+      }
+
+      function makeBookCard(book, index) {
+        var title = titleOf(book);
+        var wordCount = wordsIn(book);
+        var minutes = Math.max(1, Math.round(wordCount / 225));
+        var button = document.createElement("button");
+        button.type = "button";
+        button.className = "book-card";
+        button.setAttribute("aria-label", "Open " + title);
+
+        var number = document.createElement("span");
+        number.className = "book-card__number";
+        number.textContent = "Volume " + String(index + 1).padStart(2, "0");
+        var heading = document.createElement("strong");
+        heading.textContent = title;
+        var description = document.createElement("span");
+        description.className = "book-card__description";
+        description.textContent = descriptions[title] || "Open this volume.";
+        var meta = document.createElement("span");
+        meta.className = "book-card__meta";
+        meta.textContent = wordCount.toLocaleString() + " words · about " + minutes + " min";
+
+        button.append(number, heading, description, meta);
+        button.addEventListener("click", function () { activateBook(book); });
+        return button;
+      }
+
+      function initializeBooks() {
+        var libraryButton = document.createElement("button");
+        libraryButton.type = "button";
+        libraryButton.dataset.target = "library";
+        libraryButton.textContent = "Library home";
+        libraryButton.addEventListener("click", function () { showLibrary(); });
+        bookNav.appendChild(libraryButton);
+
+        books.forEach(function (book, index) {
+          book.classList.add("archive-book");
+          book.setAttribute("aria-label", titleOf(book));
+          bookNav.appendChild(makeBookButton(book, index));
+          bookCards.appendChild(makeBookCard(book, index));
+        });
+
+        Array.prototype.forEach.call(content.querySelectorAll("table"), function (table) {
+          if (table.parentElement.classList.contains("table-scroll")) return;
+          var wrapper = document.createElement("div");
+          wrapper.className = "table-scroll";
+          wrapper.setAttribute("role", "region");
+          wrapper.setAttribute("aria-label", "Scrollable table");
+          wrapper.tabIndex = 0;
+          table.parentNode.insertBefore(wrapper, table);
+          wrapper.appendChild(table);
+        });
+      }
+
+      function textSnippet(text, query) {
+        var lower = text.toLocaleLowerCase();
+        var start = Math.max(0, lower.indexOf(query) - 65);
+        var end = Math.min(text.length, start + 185);
+        return (start > 0 ? "…" : "") + text.slice(start, end).trim() + (end < text.length ? "…" : "");
+      }
+
+      function appendHighlightedText(parent, text, query) {
+        var lower = text.toLocaleLowerCase();
+        var cursor = 0;
+        var index = lower.indexOf(query, cursor);
+        while (index !== -1) {
+          parent.appendChild(document.createTextNode(text.slice(cursor, index)));
+          var mark = document.createElement("mark");
+          mark.textContent = text.slice(index, index + query.length);
+          parent.appendChild(mark);
+          cursor = index + query.length;
+          index = lower.indexOf(query, cursor);
+        }
+        parent.appendChild(document.createTextNode(text.slice(cursor)));
+      }
+
+      function headingContext(element, book) {
+        var section = element.closest("section");
+        while (section && section !== book) {
+          var heading = section.querySelector(":scope > h2, :scope > h3, :scope > h4");
+          if (heading) return heading.textContent.trim();
+          section = section.parentElement ? section.parentElement.closest("section") : null;
+        }
+        return titleOf(book);
+      }
+
+      function buildSearchIndex() {
+        var nextId = 1;
+        books.forEach(function (book) {
+          var seen = new Set();
+          var elements = book.querySelectorAll("h2, h3, h4, p, li, tr");
+          Array.prototype.forEach.call(elements, function (element) {
+            var text = element.textContent.replace(/\s+/g, " ").trim();
+            if (text.length < 3 || seen.has(text)) return;
+            seen.add(text);
+            if (!element.id) element.id = "archive-search-" + nextId++;
+            searchIndex.push({
+              element: element,
+              book: book,
+              bookTitle: titleOf(book),
+              context: headingContext(element, book),
+              text: text,
+              folded: text.toLocaleLowerCase()
+            });
+          });
+        });
+      }
+
+      function performSearch() {
+        var raw = searchInput.value.trim();
+        var query = raw.toLocaleLowerCase();
+        searchResults.replaceChildren();
+        if (query.length < 2) {
+          searchStatus.textContent = "Type at least two characters to search all four volumes.";
+          return;
+        }
+
+        var matches = searchIndex.filter(function (item) { return item.folded.indexOf(query) !== -1; }).slice(0, 60);
+        searchStatus.textContent = matches.length ? matches.length + (matches.length === 60 ? "+" : "") + " result" + (matches.length === 1 ? "" : "s") + " for “" + raw + "”" : "No results for “" + raw + "”";
+
+        matches.forEach(function (match) {
+          var result = document.createElement("button");
+          result.type = "button";
+          result.className = "search-result";
+          var bookName = document.createElement("strong");
+          bookName.textContent = match.bookTitle;
+          var snippet = document.createElement("span");
+          appendHighlightedText(snippet, textSnippet(match.text, query), query);
+          var context = document.createElement("small");
+          context.textContent = match.context;
+          result.append(bookName, snippet, context);
+          result.addEventListener("click", function () {
+            activateBook(match.book, { history: false, scroll: false });
+            updateHistory(match.element.id, false);
+            closeSearch();
+            scrollToNode(match.element);
+            match.element.classList.remove("search-hit");
+            window.requestAnimationFrame(function () { match.element.classList.add("search-hit"); });
+          });
+          searchResults.appendChild(result);
+        });
+      }
+
+      function openSearch() {
+        lastFocus = document.activeElement;
+        searchLayer.hidden = false;
+        body.style.overflow = "hidden";
+        window.requestAnimationFrame(function () { searchInput.focus(); });
+      }
+
+      function closeSearch() {
+        searchLayer.hidden = true;
+        body.style.overflow = "";
+        if (lastFocus && typeof lastFocus.focus === "function") lastFocus.focus();
+      }
+
+      function updateProgress() {
+        if (!activeBook) {
+          progressBar.style.width = "0%";
+          backToTop.classList.remove("is-visible");
+          return;
+        }
+        var rect = activeBook.getBoundingClientRect();
+        var top = window.scrollY + rect.top;
+        var end = top + activeBook.offsetHeight - window.innerHeight;
+        var range = Math.max(1, end - top);
+        var progress = Math.min(1, Math.max(0, (window.scrollY - top) / range));
+        progressBar.style.width = (progress * 100).toFixed(2) + "%";
+        backToTop.classList.toggle("is-visible", window.scrollY > top + 420);
+
+        var headings = Array.prototype.slice.call(chapterNav.querySelectorAll("a"));
+        var currentId = "";
+        headings.forEach(function (link) {
+          var node = document.getElementById(link.hash.slice(1));
+          if (node && node.getBoundingClientRect().top <= 145) currentId = node.id;
+        });
+        headings.forEach(function (link) {
+          if (link.hash === "#" + currentId) link.setAttribute("aria-current", "location");
+          else link.removeAttribute("aria-current");
+        });
+      }
+
+      function setFontScale(value) {
+        var scale = Math.min(1.35, Math.max(0.9, value));
+        document.documentElement.style.setProperty("--font-scale", scale.toFixed(2));
+        try { localStorage.setItem(storagePrefix + "font-scale", scale.toFixed(2)); } catch (error) {}
+        updateProgress();
+      }
+
+      function applyTheme(theme) {
+        var selected = theme === "night" ? "night" : "paper";
+        document.documentElement.dataset.theme = selected;
+        var button = document.getElementById("themeButton");
+        button.textContent = selected === "night" ? "☀" : "☾";
+        button.setAttribute("aria-label", selected === "night" ? "Use light reading mode" : "Use dark reading mode");
+        try { localStorage.setItem(storagePrefix + "theme", selected); } catch (error) {}
+      }
+
+      initializeBooks();
+      buildSearchIndex();
+
+      document.getElementById("homeButton").addEventListener("click", function () { showLibrary(); });
+      menuButton.addEventListener("click", function () { body.classList.contains("drawer-open") ? closeDrawer() : openDrawer(); });
+      document.getElementById("drawerScrim").addEventListener("click", closeDrawer);
+      document.getElementById("searchButton").addEventListener("click", openSearch);
+      document.getElementById("closeSearchButton").addEventListener("click", closeSearch);
+      searchInput.addEventListener("input", performSearch);
+      searchLayer.addEventListener("click", function (event) { if (event.target === searchLayer) closeSearch(); });
+
+      document.getElementById("fontDownButton").addEventListener("click", function () {
+        var current = parseFloat(getComputedStyle(document.documentElement).getPropertyValue("--font-scale")) || 1;
+        setFontScale(current - 0.1);
+      });
+      document.getElementById("fontUpButton").addEventListener("click", function () {
+        var current = parseFloat(getComputedStyle(document.documentElement).getPropertyValue("--font-scale")) || 1;
+        setFontScale(current + 0.1);
+      });
+      document.getElementById("themeButton").addEventListener("click", function () {
+        applyTheme(document.documentElement.dataset.theme === "night" ? "paper" : "night");
+      });
+      previousBook.addEventListener("click", function () {
+        var index = books.indexOf(activeBook);
+        if (index > 0) activateBook(books[index - 1]);
+      });
+      nextBook.addEventListener("click", function () {
+        var index = books.indexOf(activeBook);
+        if (index >= 0 && index < books.length - 1) activateBook(books[index + 1]);
+      });
+      backToTop.addEventListener("click", function () { if (activeBook) scrollToNode(activeBook); });
+      window.addEventListener("scroll", updateProgress, { passive: true });
+      window.addEventListener("resize", updateProgress);
+      window.addEventListener("hashchange", function () { navigateToId(decodeURIComponent(location.hash.slice(1)), false); });
+      document.addEventListener("keydown", function (event) {
+        if ((event.ctrlKey || event.metaKey) && event.key.toLocaleLowerCase() === "k") {
+          event.preventDefault();
+          openSearch();
+        } else if (event.key === "/" && !searchLayer.hidden && document.activeElement !== searchInput) {
+          event.preventDefault();
+          searchInput.focus();
+        } else if (event.key === "Escape") {
+          if (!searchLayer.hidden) closeSearch();
+          else closeDrawer();
+        }
+      });
+
+      var storedTheme = null;
+      var storedScale = null;
+      try {
+        storedTheme = localStorage.getItem(storagePrefix + "theme");
+        storedScale = parseFloat(localStorage.getItem(storagePrefix + "font-scale"));
+      } catch (error) {}
+      if (!storedTheme && window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches) storedTheme = "night";
+      applyTheme(storedTheme || "paper");
+      if (storedScale) setFontScale(storedScale);
+
+      var initialId = decodeURIComponent(location.hash.slice(1));
+      if (initialId) navigateToId(initialId, true);
+      else showLibrary({ history: true, replace: true, scroll: false });
+    })();
+  </script>
+</body>
+</html>
